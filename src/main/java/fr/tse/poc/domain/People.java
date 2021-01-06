@@ -1,11 +1,13 @@
 package fr.tse.poc.domain;
 
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
+@Data
 @MappedSuperclass
 @NoArgsConstructor
 public class People {
