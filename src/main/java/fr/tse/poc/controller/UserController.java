@@ -1,13 +1,11 @@
 package fr.tse.poc.controller;
 
-import fr.tse.poc.authentication.AuthenticableUser;
 import fr.tse.poc.authentication.AuthenticableUserDetails;
-import fr.tse.poc.authentication.AuthenticableUserRepository;
 import fr.tse.poc.authentication.Role;
-import fr.tse.poc.dao.ManagedRepository;
 import fr.tse.poc.dao.ManagerRepository;
-import fr.tse.poc.domain.People;
+import fr.tse.poc.dao.UserRepository;
 import fr.tse.poc.domain.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,46 +14,44 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Collection;
+import java.util.NoSuchElementException;
 
+@Slf4j
+@RestController
 public class UserController {
     @Autowired
-    AuthenticableUserRepository authenticableUserRepository;
+    ManagerRepository managerRepository;
     @Autowired
-    private ManagedRepository managedRepository;
-    @Autowired
-    private ManagerRepository managerRepository;
+    UserRepository userRepository;
 
-    /**
-     * Find all users
-     *
-     * @param authentication
-     *
-     * @return
-     */
-
-    @GetMapping(path = "/Users")
+    @GetMapping(path = "/users")
     public ResponseEntity<Collection<User>> getUsers(Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        AuthenticableUser authenticableUser = authenticableUserRepository.findByUsername(userDetails.getUsername());
-
-        if (authenticableUser.getRole().equals(Role.Admin)) {
-            return new ResponseEntity<>(this.managedRepository.findAll(), HttpStatus.OK);
+        if (userDetails.getRole().equals(Role.Admin)) {
+            return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
 
-    @GetMapping(path = "/Users/{id}")
-    public ResponseEntity<User> getUsersById(@PathVariable long id, Authentication authentication) {
+    @GetMapping(path = "/users/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable long id, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        AuthenticableUser authenticableUser = authenticableUserRepository.findByUsername(userDetails.getUsername());
-        People user = managedRepository.getOne(id);
-        switch (authenticableUser.getRole()) {
+
+        User user = null;
+        try {
+            user = userRepository.findById(id).orElseThrow();
+        } catch (NoSuchElementException e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+
+        switch (userDetails.getRole()) {
             case Admin:
-                return new ResponseEntity(user, HttpStatus.OK);
+                return new ResponseEntity<>(user, HttpStatus.OK);
             case Manager:
-                if (managerRepository.getOne(authenticableUser.getForeignID()).getUsers().contains(user)) {
-                    return new ResponseEntity(user, HttpStatus.OK);
+                if (managerRepository.getOne(userDetails.getForeignId()).getUsers().contains(user)) {
+                    return new ResponseEntity<>(user, HttpStatus.OK);
                 } else {
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
@@ -65,16 +61,39 @@ public class UserController {
         }
     }
 
-    @PostMapping(path = "/Users")
+    @PostMapping(path = "/users")
     public ResponseEntity<User> addUser(@Valid @RequestBody User user, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        AuthenticableUser authenticableUser = authenticableUserRepository.findByUsername(userDetails.getUsername());
-        switch (authenticableUser.getRole()) {
+        switch (userDetails.getRole()) {
             case Admin:
-                return new ResponseEntity<>(this.managedRepository.save(user), HttpStatus.CREATED);
+                return new ResponseEntity<>(userRepository.save(user), HttpStatus.CREATED);
             case Manager:
-                if (managerRepository.getOne(authenticableUser.getForeignID()).getUsers().contains(user)) {
-                    return new ResponseEntity<>(this.managedRepository.save(user), HttpStatus.CREATED);
+            case User:
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @DeleteMapping(path = "/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable long id, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+
+        User user = null;
+        try {
+            user = userRepository.findById(id).orElseThrow();
+        } catch (NoSuchElementException e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+
+        switch (userDetails.getRole()) {
+            case Admin:
+                userRepository.deleteById(id);
+                return new ResponseEntity<>(HttpStatus.OK);
+            case Manager:
+                if (managerRepository.getOne(userDetails.getForeignId()).getUsers().contains(user)) {
+                    userRepository.deleteById(id);
+                    return new ResponseEntity<>(HttpStatus.OK);
                 } else {
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
@@ -82,26 +101,5 @@ public class UserController {
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-
     }
-
-    @DeleteMapping(path = "/Users/{id}")
-    public void deleteUser(@PathVariable long id, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        AuthenticableUser authenticableUser = authenticableUserRepository.findByUsername(userDetails.getUsername());
-        People user = managedRepository.getOne(id);
-        switch (authenticableUser.getRole()) {
-            case Admin:
-                this.managedRepository.deleteById(id);
-            case Manager:
-                if (managerRepository.getOne(authenticableUser.getForeignID()).getUsers().contains(user)) {
-                    this.managedRepository.deleteById(id);
-                }
-            case User:
-            default:
-                break;
-        }
-
-    }
-
 }
