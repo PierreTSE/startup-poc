@@ -1,11 +1,16 @@
 package fr.tse.poc.controller;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.tse.poc.authentication.AuthenticableUserDetails;
+import fr.tse.poc.authentication.Role;
 import fr.tse.poc.dao.ManagedRepository;
 import fr.tse.poc.dao.ManagerRepository;
 import fr.tse.poc.dao.ProjectRepository;
@@ -29,7 +36,7 @@ public class ProjectController {
 	private ProjectRepository repo;
 	
 	@Autowired
-	private ManagerRepository ManRepo;
+	private ManagerRepository manRepo;
 	
 	@Autowired
 	private TimeCheckRepository timeRepo;
@@ -41,96 +48,133 @@ public class ProjectController {
 	 * Returns all projects
 	 */
 	@GetMapping(path="/Projects")
-	public List<Project> getProject(){
+	public ResponseEntity<Collection<Project>> getProject(Authentication authentication){
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		
-		return repo.findAll();
-		
+		switch(userDetails.getRole()) {
+		case "Admin":
+			return new ResponseEntity<>(repo.findAll(),HttpStatus.OK);
+		case "Manager":
+			return new ResponseEntity<>( manRepo.getOne(userDetails.getForeignId()).getProjects(),HttpStatus.OK);
+		case "User" : 
+			ArrayList<Project> projs = new ArrayList<Project>();
+			projs.add( userRepo.getOne(userDetails.getForeignId()).getProject());
+			return new ResponseEntity<>(projs,HttpStatus.OK);
+			default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
 	}
 	
 	/*
 	 * return the project given by the id
 	 */
 	@GetMapping(path="/Projects/{id}")
-	public Project getOneProject(@PathVariable long id){
-		return repo.getOne(id);
+	public  ResponseEntity<Project> getOneProject(Authentication authentication, @PathVariable long id){
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+		
+		switch(userDetails.getRole()) {
+		case "Admin":
+			return new ResponseEntity<>(repo.getOne(id),HttpStatus.OK);
+		case "Manager":
+			Project theProj = repo.getOne(id);
+			if ( manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {
+				return new ResponseEntity<>( theProj,HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			}
+		case "User" :
+			if (userRepo.getOne(userDetails.getForeignId()).getProject().getId() == id) {
+				return new ResponseEntity<>(repo.getOne(id),HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			}
+		default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
 	}
-	
+
 	/*
-	 * Delete the project given by the id
-	 */
 	@DeleteMapping(path="/Projects/{id}")
 	public void delProj(@PathVariable long id) {
 		repo.deleteById(id);
 	}
+	*/
 	
 	/*
 	 * Add a new project With a name and a manager
 	 */
 	@PostMapping(path="/Project")
-	public Project addProject(@RequestBody Map<String,String> params ){
+	public ResponseEntity<Project> addProject(Authentication authentication, @RequestBody Map<String,String> params ){
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-		Project pro = new Project();
-		pro.setName(params.get("name"));
-		pro.setManager(ManRepo.getOne( Long.parseLong( params.get("manId") ) ) );
-		pro.setTimeChecks(new HashSet<TimeCheck>());
-		pro.setUsers(new HashSet<User>());
-		return repo.save(pro);
+		if (userDetails.getRole().equals(Role.Manager)) {
+			Project pro = new Project();
+			pro.setName(params.get("name"));
+			pro.setManager(manRepo.getOne( userDetails.getForeignId() ) );
+			pro.setTimeChecks(new HashSet<TimeCheck>());
+			pro.setUsers(new HashSet<User>());
+			return new ResponseEntity<>(repo.save(pro),HttpStatus.OK);
+		}
+		else {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
+		
+		
 	}
 	
 	/*
 	 * modify a project name or manager given by id
 	 */
 	@PatchMapping(path="/Project/{id}/mod")
-	public Project modProjectBase(@PathVariable long id, @RequestBody Map<String,String> params) {
+	public ResponseEntity<Project> modProjectBase(Authentication authentication, @PathVariable long id, @RequestBody Map<String,String> params) {
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+		
+		if (userDetails.getRole().equals(Role.Manager)) {
+			Project pro = repo.getOne(id);	
+			if (pro.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
+				pro.setName(params.get("name"));
+				pro.setManager(manRepo.getOne( Long.parseLong( params.get("manId") ) ) );
+				return new ResponseEntity<>(pro, HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
-		Project pro = repo.getOne(id);
-		pro.setName(params.get("name"));
-		pro.setManager(ManRepo.getOne( Long.parseLong( params.get("manId") ) ) );
-		return pro;
+			}
+		}
+		else{
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		} 
 	}
 	
-	/*
-	 * modify a project timeCheck list by adding or deleting the list in the  body depending on the boolean add.
-	 */
-	@PatchMapping(path= "/Project/{id}/timeCheck")
-	public Project modProjectTime(@PathVariable long id, @RequestBody List<String> timesId, String add) {
-		Project myProj = repo.getOne(id);
-		Set<TimeCheck> params = getTimeFromStringList(timesId);
-		
-		if (Boolean.parseBoolean(add)) {
-			myProj.getTimeChecks().addAll(params);
-		}
-		else {
-			myProj.getTimeChecks().removeAll(params);
-		}
-		return myProj;
-	}
 	
 	/*
 	 * modify a project user list by adding or deleting the list in the  body depending on the boolean add.
 	 */
 	@PatchMapping(path= "/Project/{id}/managed")
-	public Project modProjectUsers(@PathVariable long id, @RequestBody List<String> users, String add) {
-		Project myProj = repo.getOne(id);
-		Set<User> params = getUserFromStringList(users);
-		
-		if (Boolean.parseBoolean(add)) {
-			myProj.getUsers().addAll(params);
+	public ResponseEntity<Project> modProjectUsers(Authentication authentication, @PathVariable long id, @RequestBody List<String> users, String add) {
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+
+		if (userDetails.getRole().equals(Role.Manager)) {
+
+			Project myProj = repo.getOne(id);
+			if (myProj.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
+
+				Set<User> params = getUserFromStringList(users);
+				if (Boolean.parseBoolean(add)) {
+					myProj.getUsers().addAll(params);
+				}
+				else {
+					myProj.getUsers().removeAll(params);
+				}
+				return new ResponseEntity<>(myProj,HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			}
 		}
-		else {
-			myProj.getUsers().removeAll(params);
-		}
-		return myProj;		
-	}
-	
-	
-	private Set<TimeCheck> getTimeFromStringList(List<String> ids){
-		Set<TimeCheck> timeCheck = new HashSet<TimeCheck>();
-		ids.forEach(tId -> { 
-			timeCheck.add(timeRepo.getOne(Long.parseLong(tId)) );
-		});
-		
-		return timeCheck;
+		else{
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		} 	
 	}
 
 	private Set<User> getUserFromStringList(List<String> ids){
