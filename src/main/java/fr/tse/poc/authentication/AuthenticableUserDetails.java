@@ -26,8 +26,8 @@ public class AuthenticableUserDetails implements UserDetails {
         return authenticableUser.getUsername();
     }
 
-    public String getRole() {
-        return authenticableUser.getRole().toString();
+    public Role getRole() {
+        return authenticableUser.getRole();
     }
 
     public Long getForeignId() {

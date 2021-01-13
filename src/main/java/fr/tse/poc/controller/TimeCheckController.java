@@ -48,13 +48,7 @@ public class TimeCheckController {
 		if (userDetails.getRole().equals(Role.Manager)) {
 			Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
             Collection<TimeCheck> allTime = timeRepo.findAll();
-            Iterator<TimeCheck> i = allTime.iterator();
-            while(i.hasNext()) {
-            	TimeCheck last = i.next();
-            	if (!managed.contains(last.getUser())) {
-            		i.remove();
-            	}
-            }
+			allTime.removeIf(last -> !managed.contains(last.getUser()));
             return new ResponseEntity<>(allTime, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -78,23 +72,25 @@ public class TimeCheckController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 	}
+
+	// todo ajouter
 	/*
 	@DeleteMapping(path="/TimeCheck/{id}")
 	public void delTime(@PathVariable Long id) {
 		timeRepo.deleteById(id);
 	}
 	*/
-	
+
 	@PostMapping( path="/TimeCheck")
 	public ResponseEntity<TimeCheck> addTime(Authentication authentication, @RequestBody Map<String,String> params ) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-		
+
 		if (userDetails.getRole().equals(Role.User)) {
 		
 			TimeCheck nuTime = new TimeCheck( );
 			List<Project> projs = projectRepo.findAll();
 			int it = 0;
-			while (it<projs.size() && (params.get("name" ) !=(projs.get(it).getName()) ) )  {
+			while (it<projs.size() && (!params.get("name").equals(projs.get(it).getName())) )  {
 				it++;
 			}
 			if (it == projs.size()) {
@@ -111,7 +107,8 @@ public class TimeCheckController {
 			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 	}
-	
+
+	// todo patch pr tt le monde
 	/*
 	@PatchMapping(path="/TimeCheck/{id}")
 	public void modTime(@PathVariable Long id, @RequestBody Map<String,String> params) {

@@ -47,16 +47,16 @@ public class ProjectController {
 	/*
 	 * Returns all projects
 	 */
-	@GetMapping(path="/Projects")
-	public ResponseEntity<Collection<Project>> getProject(Authentication authentication){
+	@GetMapping(path="/projects")
+	public ResponseEntity<Collection<Project>> getProjects(Authentication authentication){
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		
 		switch(userDetails.getRole()) {
-		case "Admin":
+		case Admin:
 			return new ResponseEntity<>(repo.findAll(),HttpStatus.OK);
-		case "Manager":
+		case Manager:
 			return new ResponseEntity<>( manRepo.getOne(userDetails.getForeignId()).getProjects(),HttpStatus.OK);
-		case "User" : 
+		case User : 
 			ArrayList<Project> projs = new ArrayList<Project>();
 			projs.add( userRepo.getOne(userDetails.getForeignId()).getProject());
 			return new ResponseEntity<>(projs,HttpStatus.OK);
@@ -67,14 +67,14 @@ public class ProjectController {
 	/*
 	 * return the project given by the id
 	 */
-	@GetMapping(path="/Projects/{id}")
-	public  ResponseEntity<Project> getOneProject(Authentication authentication, @PathVariable long id){
+	@GetMapping(path="/projects/{id}")
+	public  ResponseEntity<Project> getProjectById(@PathVariable long id, Authentication authentication){
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		
 		switch(userDetails.getRole()) {
-		case "Admin":
+		case Admin:
 			return new ResponseEntity<>(repo.getOne(id),HttpStatus.OK);
-		case "Manager":
+		case Manager:
 			Project theProj = repo.getOne(id);
 			if ( manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {
 				return new ResponseEntity<>( theProj,HttpStatus.OK);
@@ -82,7 +82,7 @@ public class ProjectController {
 			else {
 				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 			}
-		case "User" :
+		case User :
 			if (userRepo.getOne(userDetails.getForeignId()).getProject().getId() == id) {
 				return new ResponseEntity<>(repo.getOne(id),HttpStatus.OK);
 			}
@@ -93,6 +93,7 @@ public class ProjectController {
 		}
 	}
 
+	// todo @delete
 	/*
 	@DeleteMapping(path="/Projects/{id}")
 	public void delProj(@PathVariable long id) {
@@ -103,16 +104,13 @@ public class ProjectController {
 	/*
 	 * Add a new project With a name and a manager
 	 */
-	@PostMapping(path="/Project")
+	@PostMapping(path="/projects")
 	public ResponseEntity<Project> addProject(Authentication authentication, @RequestBody Map<String,String> params ){
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-
+	//todo admin
 		if (userDetails.getRole().equals(Role.Manager)) {
-			Project pro = new Project();
-			pro.setName(params.get("name"));
-			pro.setManager(manRepo.getOne( userDetails.getForeignId() ) );
-			pro.setTimeChecks(new HashSet<TimeCheck>());
-			pro.setUsers(new HashSet<User>());
+			// todo getOne -> findbyId avec try-catch et 404 si pas trouvé
+			Project pro = new Project(params.get("name"), manRepo.getOne( userDetails.getForeignId() ));
 			return new ResponseEntity<>(repo.save(pro),HttpStatus.OK);
 		}
 		else {
@@ -125,10 +123,10 @@ public class ProjectController {
 	/*
 	 * modify a project name or manager given by id
 	 */
-	@PatchMapping(path="/Project/{id}/mod")
-	public ResponseEntity<Project> modProjectBase(Authentication authentication, @PathVariable long id, @RequestBody Map<String,String> params) {
+	@PatchMapping(path="/projects/{id}")
+	public ResponseEntity<Project> modProjectBase(@PathVariable long id, @RequestBody Map<String,String> params, Authentication authentication) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-		
+		//todo admin
 		if (userDetails.getRole().equals(Role.Manager)) {
 			Project pro = repo.getOne(id);	
 			if (pro.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
@@ -150,10 +148,12 @@ public class ProjectController {
 	/*
 	 * modify a project user list by adding or deleting the list in the  body depending on the boolean add.
 	 */
-	@PatchMapping(path= "/Project/{id}/managed")
+	@PatchMapping(path= "/projects/{id}/users")
+	// todo voir si List<Long> se fait
+	// todo Boolean add
 	public ResponseEntity<Project> modProjectUsers(Authentication authentication, @PathVariable long id, @RequestBody List<String> users, String add) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-
+		//todo admin
 		if (userDetails.getRole().equals(Role.Manager)) {
 
 			Project myProj = repo.getOne(id);
@@ -177,6 +177,7 @@ public class ProjectController {
 		} 	
 	}
 
+	// todo -> UserRepo
 	private Set<User> getUserFromStringList(List<String> ids){
 		Set<User> users = new HashSet<User>();
 		ids.forEach(tId -> { 
