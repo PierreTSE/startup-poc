@@ -1,15 +1,17 @@
 package fr.tse.poc.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
-import java.util.HashSet;
-import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -29,5 +31,9 @@ public class Manager extends People {
 
     public Manager(String firstname, String lastname) {
         super(firstname, lastname);
+    }
+    public Manager(User user) {
+    	this.setFirstname(user.getFirstname());
+    	this.setLastname(user.getLastname());
     }
 }

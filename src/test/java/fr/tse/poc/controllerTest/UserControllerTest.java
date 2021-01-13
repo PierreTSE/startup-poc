@@ -30,8 +30,6 @@ public class UserControllerTest {
     @WithUserDetails(value = "a", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void getAllUserTest() throws Exception {
-        Assertions.assertEquals(1, userRepository.findAll().size());
-        Assertions.assertEquals("Jean", userRepository.findAll().get(0).getFirstname());
 
         mvc.perform(get("/users")
                 .contentType(MediaType.APPLICATION_JSON))
