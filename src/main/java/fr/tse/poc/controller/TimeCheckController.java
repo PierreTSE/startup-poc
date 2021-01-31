@@ -73,13 +73,37 @@ public class TimeCheckController {
 		}
 	}
 
-	// todo ajouter
-	/*
+	
+	
 	@DeleteMapping(path="/TimeCheck/{id}")
-	public void delTime(@PathVariable Long id) {
-		timeRepo.deleteById(id);
+	public ResponseEntity<TimeCheck> delTime(Authentication authentication,@PathVariable Long id) {
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+
+		switch(userDetails.getRole()) {
+		case Admin:
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		case Manager:
+			Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+            TimeCheck wantedTime = timeRepo.getOne(id);
+            if (managed.contains(wantedTime.getUser())) {
+            	timeRepo.deleteById(id);
+            	return new ResponseEntity<>( HttpStatus.OK);
+            }
+            else {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+		case User :
+			if (userRepo.getOne(userDetails.getForeignId()) == timeRepo.getOne(id).getUser()) {
+				timeRepo.deleteById(id);
+				return new ResponseEntity<>(HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			}
+		default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
 	}
-	*/
+	
 
 	@PostMapping( path="/TimeCheck")
 	public ResponseEntity<TimeCheck> addTime(Authentication authentication, @RequestBody Map<String,String> params ) {
@@ -108,22 +132,56 @@ public class TimeCheckController {
 		}
 	}
 
-	// todo patch pr tt le monde
-	/*
+	
+	
 	@PatchMapping(path="/TimeCheck/{id}")
-	public void modTime(@PathVariable Long id, @RequestBody Map<String,String> params) {
-		TimeCheck myTime = timeRepo.getOne(id);
-		
-		if (params.get("projectId") != null){
-			myTime.setProject(projectRepo.getOne(Long.parseLong(params.get("projectId"))));
-		}
-		if (params.get("time") != null) {
-			myTime.setTime(Float.parseFloat(params.get("time")));
-		}
-		if (params.get("UserId")!= null) {
-			myTime.setUser(userRepo.getOne(Long.parseLong(params.get("UserId"))));
+	public ResponseEntity<TimeCheck> modTime(Authentication authentication,@PathVariable Long id, @RequestBody Map<String,String> params) {
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+
+		switch(userDetails.getRole()) {
+		case Admin:
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		case Manager:
+			Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+            TimeCheck wantedTime = timeRepo.getOne(id);
+            if (managed.contains(wantedTime.getUser())) {
+            	TimeCheck myTime = timeRepo.getOne(id);
+        		
+        		if (params.get("projectId") != null){
+        			myTime.setProject(projectRepo.getOne(Long.parseLong(params.get("projectId"))));
+        		}
+        		if (params.get("time") != null) {
+        			myTime.setTime(Float.parseFloat(params.get("time")));
+        		}
+        		if (params.get("UserId")!= null) {
+        			myTime.setUser(userRepo.getOne(Long.parseLong(params.get("UserId"))));
+        		}
+            	return new ResponseEntity<>(myTime, HttpStatus.OK);
+            }
+            else {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+		case User :
+			if (userRepo.getOne(userDetails.getForeignId()) == timeRepo.getOne(id).getUser()) {
+				TimeCheck myTime = timeRepo.getOne(id);
+				
+				if (params.get("projectId") != null){
+					myTime.setProject(projectRepo.getOne(Long.parseLong(params.get("projectId"))));
+				}
+				if (params.get("time") != null) {
+					myTime.setTime(Float.parseFloat(params.get("time")));
+				}
+				if (params.get("UserId")!= null) {
+					myTime.setUser(userRepo.getOne(Long.parseLong(params.get("UserId"))));
+				}
+				return new ResponseEntity<>(myTime, HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			}
+		default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 	}
-	*/
+	
 	
 }

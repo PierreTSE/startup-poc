@@ -93,13 +93,40 @@ public class ProjectController {
 		}
 	}
 
-	// todo @delete
-	/*
+
+	
 	@DeleteMapping(path="/Projects/{id}")
-	public void delProj(@PathVariable long id) {
-		repo.deleteById(id);
+	public ResponseEntity<Project> delProj(@PathVariable long id, Authentication authentication) {
+		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+		
+		switch(userDetails.getRole()) {
+		case Admin:
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		case Manager:
+			Project theProj = repo.getOne(id);
+			if ( manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj))
+			{
+				repo.deleteById(id);
+				return new ResponseEntity<>(HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			}
+		case User :
+			if (userRepo.getOne(userDetails.getForeignId()).getProject().getId() == id) {
+				repo.deleteById(id);
+				return new ResponseEntity<>(HttpStatus.OK);
+			}
+			else {
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			}
+		default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
+		
+		
+		
 	}
-	*/
+	
 	
 	/*
 	 * Add a new project With a name and a manager
