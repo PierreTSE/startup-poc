@@ -100,7 +100,7 @@ public class ProjectController {
 
 	
 	@DeleteMapping(path="/Projects/{id}")
-	public ResponseEntity<Project> delProj(@PathVariable long id, Authentication authentication) {
+	public ResponseEntity<Project> delProject(@PathVariable long id, Authentication authentication) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		
 		switch(userDetails.getRole()) {
@@ -136,14 +136,14 @@ public class ProjectController {
 	 * Add a new project With a name and a manager
 	 */
 	@PostMapping(path="/projects")
-	public ResponseEntity<Project> addProject(Authentication authentication, @RequestBody Map<String,String> params ){
+	public ResponseEntity<Project> addProject(Authentication authentication, @RequestBody String projectName ){
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		if (userDetails.getRole().equals(Role.Manager)) {
 			
 			Optional<Manager> man = manRepo.findById(userDetails.getForeignId());
 			
 			if (man.isPresent()) {
-				Project pro = new Project(params.get("name"), man.get() );
+				Project pro = new Project(projectName, man.get() );
 				return new ResponseEntity<>(repo.save(pro),HttpStatus.OK);
 			}
 			else {
@@ -169,8 +169,15 @@ public class ProjectController {
 			Project pro = repo.getOne(id);	
 			if (pro.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
 				pro.setName(params.get("name"));
-				pro.setManager(manRepo.getOne( Long.parseLong( params.get("manId") ) ) );
-				return new ResponseEntity<>(pro, HttpStatus.OK);
+				
+				Optional<Manager> man = manRepo.findById(Long.parseLong( params.get("managerId") ));
+				
+				if (man.isPresent()) {
+					pro.setManager(man.get());
+					return new ResponseEntity<>(pro, HttpStatus.OK);
+				}else {
+					return new ResponseEntity<>(pro, HttpStatus.NOT_FOUND);
+				}
 			}
 			else {
 				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -187,8 +194,7 @@ public class ProjectController {
 	 * modify a project user list by adding or deleting the list in the  body depending on the boolean add.
 	 */
 	@PatchMapping(path= "/projects/{id}/users",consumes = { MediaType.APPLICATION_JSON_VALUE,MediaType.MULTIPART_FORM_DATA_VALUE })
-	// todo voir si List<Long> se fait
-	// todo Boolean add
+	
 	public ResponseEntity<Project> modProjectUsers(Authentication authentication, @PathVariable long id, @RequestPart("users") List<Long> users, @RequestPart("add")boolean add) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		if (userDetails.getRole().equals(Role.Manager)) {

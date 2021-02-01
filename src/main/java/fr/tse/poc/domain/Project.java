@@ -39,4 +39,5 @@ public class Project {
         this.name = name;
         this.manager = manager;
     }
+    
 }

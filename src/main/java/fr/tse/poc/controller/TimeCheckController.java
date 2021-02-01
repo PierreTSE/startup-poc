@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.tse.poc.authentication.AuthenticableUserDetails;
@@ -106,25 +107,22 @@ public class TimeCheckController {
 	
 
 	@PostMapping( path="/TimeCheck")
-	public ResponseEntity<TimeCheck> addTime(Authentication authentication, @RequestBody Map<String,String> params ) {
+	public ResponseEntity<TimeCheck> addTime(Authentication authentication, @RequestPart("projectId") long projectId, @RequestPart("time") float time ) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
 		if (userDetails.getRole().equals(Role.User)) {
 		
 			TimeCheck nuTime = new TimeCheck( );
-			List<Project> projs = projectRepo.findAll();
-			int it = 0;
-			while (it<projs.size() && (!params.get("name").equals(projs.get(it).getName())) )  {
-				it++;
-			}
-			if (it == projs.size()) {
-				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-			}
-			else {				
-				nuTime.setProject(projs.get(it));
-				nuTime.setTime(Float.parseFloat(params.get("time")));
+			Optional<Project> proj = projectRepo.findById(projectId);
+			if (proj.isPresent()) {
+				nuTime.setProject(proj.get());
+				nuTime.setTime(time);
 				nuTime.setUser(userRepo.getOne(userDetails.getForeignId()));
 				return new ResponseEntity<>(timeRepo.save(nuTime),HttpStatus.OK);
+			}
+			else {				
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
 			}	
 		}
 		else {
@@ -148,13 +146,15 @@ public class TimeCheckController {
             	TimeCheck myTime = timeRepo.getOne(id);
         		
         		if (params.get("projectId") != null){
-        			myTime.setProject(projectRepo.getOne(Long.parseLong(params.get("projectId"))));
+        			Optional<Project> proj = projectRepo.findById(Long.parseLong(params.get("projectId")));
+        			
+        			if (proj.isEmpty()){
+                    	return new ResponseEntity<>( HttpStatus.NOT_FOUND);
+        			}
+        			myTime.setProject(proj.get());
         		}
         		if (params.get("time") != null) {
         			myTime.setTime(Float.parseFloat(params.get("time")));
-        		}
-        		if (params.get("UserId")!= null) {
-        			myTime.setUser(userRepo.getOne(Long.parseLong(params.get("UserId"))));
         		}
             	return new ResponseEntity<>(myTime, HttpStatus.OK);
             }
