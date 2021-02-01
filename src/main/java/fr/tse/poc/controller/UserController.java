@@ -1,8 +1,12 @@
 package fr.tse.poc.controller;
 
+import static java.lang.Long.parseLong;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -75,38 +79,26 @@ public class UserController {
     }
 
     @PostMapping(path = "/users")
-    public ResponseEntity<User> addUser(@RequestBody Map<String,String> params, Authentication authentication) {
+    public ResponseEntity<User> addUser(@RequestBody User user, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        
-    	User user=null;
-    	try {
-            user = userRepository.findById(Long.parseLong(params.get("id"))).orElseThrow();
-        } catch (NoSuchElementException e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-    	Manager manager= null;
-    	
+        //User user=null;
+    	Manager manager= null;    	
+//    	if (params.get("firstname")!=null && params.get("lastname")!=null ) {
+//    		user=new User(params.get("firstname"),params.get("lastname"));
+//    	} else {
+//    		return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//    	}
+//    	 
+//    	
         switch (userDetails.getRole()) {
-            case Admin:
-            	// Find manager in params
-            	if (params.containsKey("managerId")) {
-	            	try {
-	                    manager = managerRepository.findById(Long.parseLong(params.get("managerId"))).orElseThrow();
-	                    user.setManager(manager);
-	                	return new ResponseEntity<>(user,HttpStatus.CREATED);
-	                } catch (NoSuchElementException e) {
-	                    log.error(e.getMessage());
-	                    return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-	                }
-            	}
-            	// if no manager in params, never mind
-            	else return new ResponseEntity<>(user,HttpStatus.CREATED);
+            
             case Manager:
             	// Put authentified manager as this user's manager
             	manager=managerRepository.getOne(userDetails.getForeignId());
             	user.setManager(manager);
-            	return new ResponseEntity<>(user,HttpStatus.CREATED);
+            	return new ResponseEntity<>(userRepository.save(user),HttpStatus.CREATED);
+            case Admin:
+            	return new ResponseEntity<>(userRepository.save(user),HttpStatus.CREATED);
             case User:
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -164,17 +156,33 @@ public class UserController {
 	            	case "Admin":
 	            		userRepository.deleteById(user.getId());
 	            		Admin newAdmin=new Admin(user);
-	            		return new ResponseEntity<>(adminRepository.save(newAdmin),HttpStatus.OK);
+	            		return new ResponseEntity<>(adminRepository.save(newAdmin),HttpStatus.NO_CONTENT);
 	            	case "Manager":
 	            		userRepository.deleteById(user.getId());
 	            		Manager newManager=new Manager(user);
-	            		return new ResponseEntity<>(managerRepository.save(newManager),HttpStatus.OK);
+	            		return new ResponseEntity<>(managerRepository.save(newManager),HttpStatus.NO_CONTENT);
 	            	default:
 	            		return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 	            	}
             	} else if  (params.containsKey("manager")){
-            		//TODO change user's manager
-            		return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+            		// change user's manager
+            		Manager newManager = null;
+                    try {
+                    	newManager = managerRepository.findById(parseLong(params.get("manager"))).orElseThrow();
+                    } catch (NoSuchElementException e) {
+                        log.error(e.getMessage());
+                        return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+                    }
+            		
+            		switch (userDetails.getRole()) {
+                    case Admin:
+                        user.setManager(newManager);
+                        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+                    case Manager:
+                    case User:
+                    default:
+                        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            		}
             	} else {
             		return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             	}

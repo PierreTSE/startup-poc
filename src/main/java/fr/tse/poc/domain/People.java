@@ -6,15 +6,16 @@ import lombok.NoArgsConstructor;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.validation.constraints.NotNull;
 
 @Data
 @MappedSuperclass
 @NoArgsConstructor
 public class People {
     private @Id @GeneratedValue Long id;
-
+    @NotNull
     private String firstname;
-
+    @NotNull
     private String lastname;
 
     public People(String firstname, String lastname) {
