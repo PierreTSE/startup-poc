@@ -99,7 +99,7 @@ public class ProjectController {
 
 
 	
-	@DeleteMapping(path="/Projects/{id}")
+	@DeleteMapping(path="/projects/{id}")
 	public ResponseEntity<Project> delProject(@PathVariable long id, Authentication authentication) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		
@@ -136,7 +136,7 @@ public class ProjectController {
 	 * Add a new project With a name and a manager
 	 */
 	@PostMapping(path="/projects")
-	public ResponseEntity<Project> addProject(Authentication authentication, @RequestBody String projectName ){
+	public ResponseEntity<Project> addProject(@RequestPart("name") String projectName,Authentication authentication){
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		if (userDetails.getRole().equals(Role.Manager)) {
 			
@@ -166,19 +166,28 @@ public class ProjectController {
 	public ResponseEntity<Project> modProjectBase(@PathVariable long id, @RequestBody Map<String,String> params, Authentication authentication) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		if (userDetails.getRole().equals(Role.Manager)) {
-			Project pro = repo.getOne(id);	
-			if (pro.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
-				pro.setName(params.get("name"));
-				
-				Optional<Manager> man = manRepo.findById(Long.parseLong( params.get("managerId") ));
-				
-				if (man.isPresent()) {
-					pro.setManager(man.get());
-					return new ResponseEntity<>(pro, HttpStatus.OK);
-				}else {
-					return new ResponseEntity<>(pro, HttpStatus.NOT_FOUND);
-				}
+			Optional<Project> pro = repo.findById(id);
+			if (pro.isEmpty()) {
+				return new ResponseEntity<>( HttpStatus.NOT_FOUND);
 			}
+			Project myProj = pro.get();
+			if (myProj.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
+				if ( params.get("name")!=null) {
+					myProj.setName(params.get("name"));
+				}
+				
+				if (params.get("managerId")!= null) {
+					Optional<Manager> man = manRepo.findById(Long.parseLong( params.get("managerId") ));
+					
+					if (man.isEmpty()) {
+						return new ResponseEntity<>(myProj, HttpStatus.NOT_FOUND);
+					}
+					myProj.setManager(man.get());
+					
+				}
+					return new ResponseEntity<>(repo.save(myProj), HttpStatus.OK);
+			}
+			
 			else {
 				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
@@ -193,27 +202,39 @@ public class ProjectController {
 	/*
 	 * modify a project user list by adding or deleting the list in the  body depending on the boolean add.
 	 */
-	@PatchMapping(path= "/projects/{id}/users",consumes = { MediaType.APPLICATION_JSON_VALUE,MediaType.MULTIPART_FORM_DATA_VALUE })
-	
+	@PatchMapping(path= "/projects/{id}/users")
 	public ResponseEntity<Project> modProjectUsers(Authentication authentication, @PathVariable long id, @RequestPart("users") List<Long> users, @RequestPart("add")boolean add) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		if (userDetails.getRole().equals(Role.Manager)) {
-
 			
-			Project myProj = repo.getOne(id);
-			if (myProj == null) {
-				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			Optional<Project> pro = repo.findById(id);
+			if (pro.isEmpty()) {
+				return new ResponseEntity<>( HttpStatus.NOT_FOUND);
 			}
+			Project myProj = pro.get();
+		
 			if (myProj.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
 
 				List<User> params = userRepo.findAllById(users);
+				Set<User> userList = myProj.getUsers();
+				//TO DO : Verifier si l'utilisateur est bien managé par le manageur avant d'ajouter ou de retirer
 				if (add) {
-					myProj.getUsers().addAll(params);
+					params.forEach(user ->{
+						user.setProject(myProj);
+						userRepo.save(user);
+						userList.add(user);
+					});
 				}
 				else {
-					myProj.getUsers().removeAll(params);
+					params.forEach(user ->{
+						user.setProject(null);
+						userRepo.save(user);
+						userList.remove(user);
+					});
 				}
-				return new ResponseEntity<>(myProj,HttpStatus.OK);
+				myProj.setUsers(userList);
+
+				return new ResponseEntity<>(repo.save(myProj),HttpStatus.OK);
 			}
 			else {
 				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);

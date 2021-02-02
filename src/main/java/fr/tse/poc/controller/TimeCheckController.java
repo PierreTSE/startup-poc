@@ -107,7 +107,7 @@ public class TimeCheckController {
 	
 
 	@PostMapping( path="/TimeCheck")
-	public ResponseEntity<TimeCheck> addTime(Authentication authentication, @RequestPart("projectId") long projectId, @RequestPart("time") float time ) {
+	public ResponseEntity<TimeCheck> addTime( @RequestPart("projectId") long projectId, @RequestPart("time") float time,Authentication authentication ) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
 		if (userDetails.getRole().equals(Role.User)) {
