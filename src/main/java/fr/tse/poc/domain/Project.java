@@ -32,4 +32,14 @@ public class Project {
     @OneToMany(mappedBy = "project", fetch = FetchType.EAGER)
     @JsonIgnoreProperties("project")
     private Set<TimeCheck> timeChecks = new HashSet<>();
+
+    public Project(String name) {
+        this.name = name;
+    }
+
+    public void addUser(User user) {
+        users.add(user);
+        user.setProject(this);
+        user.setManager(manager);
+    }
 }
