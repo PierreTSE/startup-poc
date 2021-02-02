@@ -2,14 +2,14 @@ package fr.tse.poc.controllerTest;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +23,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.tse.poc.dao.AdminRepository;
+import fr.tse.poc.dao.ManagerRepository;
 import fr.tse.poc.dao.UserRepository;
+import fr.tse.poc.domain.Admin;
 import fr.tse.poc.domain.User;
+import fr.tse.poc.service.UserService;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles(profiles = "test")
@@ -35,8 +39,14 @@ public class UserControllerTest {
     private MockMvc mvc;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ManagerRepository managerRepository;
+    @Autowired
+    private AdminRepository adminRepository;
+    @Autowired
+    private UserService userService;
 
-    @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @WithUserDetails(value = "a", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void getAllUserTest() throws Exception {
 
@@ -56,9 +66,9 @@ public class UserControllerTest {
                 .andExpect(status().isUnauthorized());
     }
     
-    @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @WithUserDetails(value = "a", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
-    public void getUserByIdTest() throws Exception {
+    public void getUserByIdTest1() throws Exception {
     	Long user1Id=userRepository.findAll().get(0).getId();
     	mvc.perform(get("/users/"+user1Id)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -90,8 +100,6 @@ public class UserControllerTest {
     @Test
     public void postUserTest() throws Exception {
     	
-    	Map<String,String> entry=new HashMap<>();
-    	entry.put("firstname", "John");
     	User user=new User("John","Doe");
     	int size=this.userRepository.findAll().size();
 		mvc.perform(post("/users")
@@ -111,4 +119,57 @@ public class UserControllerTest {
         }
     }
     
+    
+    @WithUserDetails(value = "manager", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void deleteUserTest() throws Exception {
+    	int size=this.userRepository.findAll().size();
+
+    	Long user1Id=userRepository.findAll().get(0).getId();
+    	mvc.perform(delete("/users/"+user1Id)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+                
+		assertEquals(size-1,this.userRepository.findAll().size());
+
+    }
+    
+    @WithUserDetails(value = "a", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void patchUserTest1() throws Exception {
+    	Long user1Id=userRepository.findAll().get(1).getId();
+    	User user1=userRepository.getOne(user1Id);
+    	
+    	try{
+    		Long id=userService.getManagerId(user1);
+    		fail("Already got a manager");
+    	} catch(NullPointerException e) {
+    		// continue
+    	}
+    	
+    	Long managerId=managerRepository.findAll().get(0).getId();
+    	
+    	mvc.perform(patch("/users/"+user1Id)
+				.content("{\"manager\":"+managerId+"}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    	
+    	
+    	assertEquals(managerId,userService.getManagerId(user1)); // TO REPAIR ?
+    	
+    }
+    
+    @WithUserDetails(value = "a", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void patchUserTest2() throws Exception {
+    	Long user1Id=userRepository.findAll().get(1).getId();
+    	int size=this.adminRepository.findAll().size();
+
+    	mvc.perform(patch("/users/"+user1Id)
+				.content("{\"status\":\"Admin\"}")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    	
+    	assertEquals(size+1,this.adminRepository.findAll().size()); 
+    }
 }

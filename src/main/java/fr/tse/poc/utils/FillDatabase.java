@@ -33,7 +33,7 @@ public class FillDatabase {
     private void initAdmin() {
         Admin admin = new Admin("admin-firstname", "admin-lastname");
         AuthenticableUser authenticableUser = new AuthenticableUser(
-                "admin",
+                "a",
                 bCryptPasswordEncoder.encode("a"),
                 Role.Admin,
                 adminRepository.save(admin).getId());
