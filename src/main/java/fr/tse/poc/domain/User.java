@@ -17,7 +17,7 @@ import java.util.Set;
 @ToString(onlyExplicitlyIncluded = true)
 @Entity
 @Table(indexes = {
-        @Index(name = "manager", columnList = "manager")
+        @Index(name = "manager_index", columnList = "manager_id")
 })
 public class User extends People {
     @NotNull
