@@ -140,12 +140,8 @@ public class UserControllerTest {
     	Long user1Id=userRepository.findAll().get(1).getId();
     	User user1=userRepository.getOne(user1Id);
     	
-    	try{
-    		Long id=userService.getManagerId(user1);
-    		fail("Already got a manager");
-    	} catch(NullPointerException e) {
-    		// continue
-    	}
+    	Long id=userService.getManagerId(user1);
+    	assertEquals(null,id);
     	
     	Long managerId=managerRepository.findAll().get(0).getId();
     	
@@ -155,7 +151,7 @@ public class UserControllerTest {
                 .andExpect(status().isNoContent());
     	
     	
-    	assertEquals(managerId,userService.getManagerId(user1)); // TO REPAIR ?
+    	assertEquals(managerId,userService.getManagerId(user1)); // TO REPAIR 
     	
     }
     

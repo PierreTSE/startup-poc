@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fr.tse.poc.dao.ManagerRepository;
 import fr.tse.poc.dao.UserRepository;
+import fr.tse.poc.domain.Manager;
 import fr.tse.poc.domain.User;
 
 @Service
@@ -21,7 +22,11 @@ public class UserServiceImpl implements UserService {
 		User foundUser=this.userRepository.findById(user.getId()).orElse(null);
 		// force initialization
 		Hibernate.initialize(foundUser.getManager());
-		return foundUser.getManager().getId();
+		
+		Manager manager= foundUser.getManager();
+		if( manager!=null) {
+			return manager.getId();
+		} else return null;
 	}
 
 }
