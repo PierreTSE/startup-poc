@@ -75,7 +75,7 @@ public class FillDatabase {
             initAdmin();
 
             User user1 = new User("Jean", "Bon");
-            Manager manager1 = new Manager("Jérémy","Monslip");
+            Manager manager1 = new Manager("Jeremy","Monslip");
             
             managerRepository.save(manager1);
             log.info(manager1.getFullName() + " saved to database.");

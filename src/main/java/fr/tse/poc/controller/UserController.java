@@ -29,6 +29,7 @@ import fr.tse.poc.domain.Admin;
 import fr.tse.poc.domain.Manager;
 import fr.tse.poc.domain.People;
 import fr.tse.poc.domain.User;
+import fr.tse.poc.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -40,6 +41,7 @@ public class UserController {
 	UserRepository userRepository;
 	@Autowired
 	AdminRepository adminRepository;
+	@Autowired UserService userService;
 
 	@GetMapping(path = "/users")
 	public ResponseEntity<Collection<User>> getUsers(Authentication authentication) {
@@ -173,7 +175,7 @@ public class UserController {
     		switch (userDetails.getRole()) {
             case Admin:
                 user.setManager(newManager);
-                return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(user, HttpStatus.OK);
             case Manager:
 			case User:
 			default:

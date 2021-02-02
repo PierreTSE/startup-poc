@@ -24,7 +24,6 @@ public class User extends People {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne
-    @JsonIgnore
     private Manager manager;
 
     @ToString.Exclude

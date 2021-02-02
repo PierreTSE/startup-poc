@@ -148,10 +148,9 @@ public class UserControllerTest {
     	mvc.perform(patch("/users/"+user1Id)
 				.content("{\"manager\":"+managerId+"}")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.manager.firstname", is("Jeremy")));
     	
-    	
-    	assertEquals(managerId,userService.getManagerId(user1)); // TO REPAIR 
     	
     }
     
