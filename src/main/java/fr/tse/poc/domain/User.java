@@ -1,5 +1,6 @@
 package fr.tse.poc.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,11 +22,13 @@ public class User extends People {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne
+    @JsonIgnore
     private Manager manager;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne
+    @JsonIgnore
     private Project project;
 
     @ToString.Exclude

@@ -216,20 +216,24 @@ public class ProjectController {
 			if (myProj.getManager() ==  manRepo.getOne(userDetails.getForeignId())){
 
 				List<User> params = userRepo.findAllById(users);
+				Set<User> managed = myProj.getManager().getUsers();
 				Set<User> userList = myProj.getUsers();
-				//TO DO : Verifier si l'utilisateur est bien managé par le manageur avant d'ajouter ou de retirer
 				if (add) {
 					params.forEach(user ->{
-						user.setProject(myProj);
-						userRepo.save(user);
-						userList.add(user);
+						if (managed.contains(user)) {
+							user.setProject(myProj);
+							userRepo.save(user);
+							userList.add(user);
+						}
 					});
 				}
 				else {
 					params.forEach(user ->{
-						user.setProject(null);
-						userRepo.save(user);
-						userList.remove(user);
+						if (managed.contains(user)) {
+							user.setProject(null);
+							userRepo.save(user);
+							userList.remove(user);
+						}
 					});
 				}
 				myProj.setUsers(userList);

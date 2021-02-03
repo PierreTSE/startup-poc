@@ -21,6 +21,7 @@ public class Project {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne
+    @JsonIgnoreProperties("project")
     private Manager manager;
 
     @ToString.Exclude

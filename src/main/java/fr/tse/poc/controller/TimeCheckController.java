@@ -51,7 +51,7 @@ public class TimeCheckController {
             Collection<TimeCheck> allTime = timeRepo.findAll();
 			allTime.removeIf(last -> !managed.contains(last.getUser()));
             return new ResponseEntity<>(allTime, HttpStatus.OK);
-        }
+        }	
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
 	
@@ -156,14 +156,21 @@ public class TimeCheckController {
         		if (params.get("time") != null) {
         			myTime.setTime(Float.parseFloat(params.get("time")));
         		}
-            	return new ResponseEntity<>(myTime, HttpStatus.OK);
+            	return new ResponseEntity<>(timeRepo.save(myTime), HttpStatus.OK);
             }
             else {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
 		case User :
 			if (userRepo.getOne(userDetails.getForeignId()) == timeRepo.getOne(id).getUser()) {
-				TimeCheck myTime = timeRepo.getOne(id);
+				
+				Optional<TimeCheck> myTimeObj = timeRepo.findById(id);
+				
+				if (myTimeObj.isEmpty()) {
+					return new ResponseEntity<>( HttpStatus.NOT_FOUND);
+				}
+				TimeCheck myTime = myTimeObj.get();
+				
 				
 				if (params.get("projectId") != null){
 					myTime.setProject(projectRepo.getOne(Long.parseLong(params.get("projectId"))));
@@ -174,7 +181,7 @@ public class TimeCheckController {
 				if (params.get("UserId")!= null) {
 					myTime.setUser(userRepo.getOne(Long.parseLong(params.get("UserId"))));
 				}
-				return new ResponseEntity<>(myTime, HttpStatus.OK);
+				return new ResponseEntity<>(timeRepo.save(myTime), HttpStatus.OK);
 			}
 			else {
 				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -182,6 +189,10 @@ public class TimeCheckController {
 		default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 	}
+	
+	
+
+	
 	
 	
 }

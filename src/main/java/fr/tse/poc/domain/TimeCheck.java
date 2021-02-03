@@ -7,6 +7,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Data
 @Entity
 public class TimeCheck {
@@ -15,8 +17,10 @@ public class TimeCheck {
     private float time;
 
     @ManyToOne
+    @JsonIgnoreProperties("timeCheck")
     private User user;
 
     @ManyToOne
+    @JsonIgnoreProperties("timeCheck")
     private Project project;
 }
