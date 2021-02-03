@@ -19,7 +19,7 @@ public class CredentialsController {
     @Autowired AuthenticableUserRepository authenticableUserRepository;
 
     @GetMapping(path = "/credentials")
-    public Map<String, String> getCredentials(Authentication authentication) {
+    public Map<String, Object> getCredentials(Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
         return Map.of(
                 "username", userDetails.getUsername(),
