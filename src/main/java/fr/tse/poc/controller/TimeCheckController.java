@@ -1,5 +1,8 @@
 package fr.tse.poc.controller;
 
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -11,7 +14,11 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -206,7 +213,7 @@ public class TimeCheckController {
 	 * @return
 	 */
 	@GetMapping(path="/TimeCheck/export")
-	public ResponseEntity<TimeCheck> ExportPdf(@RequestPart(value ="users") Optional<List<Long>> usersId, Authentication authentication){		
+	public ResponseEntity<Resource> ExportPdf(@RequestPart(value ="users") Optional<List<Long>> usersId, Authentication authentication){		
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		PDFGenerator pDFGenerator = new PDFGenerator();
 
@@ -231,19 +238,37 @@ public class TimeCheckController {
 				}
 			}
 
-			pDFGenerator.generatePdfReport(time);
+			String filePath  = pDFGenerator.generatePdfReport(time);
 			
-			ClassPathResource pdfFile = new ClassPathResource("downloads/");
-
-			return new ResponseEntity<>(null, HttpStatus.OK);
+			Path path = Paths.get(filePath);
+			Resource resource = null;
+			try {
+				resource = new UrlResource(path.toUri());
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+			return ResponseEntity.ok()
+					.contentType(MediaType.parseMediaType("application/pdf"))
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+					.body(resource);
 
 		case User :
 			Set<TimeCheck> timeUser =  (userRepo.getOne(userDetails.getForeignId())).getTimeChecks();
 			
-			pDFGenerator.generatePdfReport(timeUser);
+			filePath  = pDFGenerator.generatePdfReport(timeUser);
 			
+			path = Paths.get(filePath);
+			resource = null;
+			try {
+				resource = new UrlResource(path.toUri());
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+			return ResponseEntity.ok()
+					.contentType(MediaType.parseMediaType("application/pdf"))
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+					.body(resource);
 			
-			return new ResponseEntity<>(null, HttpStatus.OK);
 		
 		default: new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		

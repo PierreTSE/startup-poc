@@ -69,7 +69,7 @@ public class PDFGenerator {
 	private static Font COURIER_SMALL = new Font(Font.FontFamily.COURIER, 16, Font.BOLD);
 	private static Font COURIER_SMALL_FOOTER = new Font(Font.FontFamily.COURIER, 12, Font.BOLD);
 
-	public void generatePdfReport(Set<TimeCheck> listTime) {
+	public String generatePdfReport(Set<TimeCheck> listTime) {
 
 		Document document = new Document();
 
@@ -86,6 +86,8 @@ public class PDFGenerator {
 		} catch (DocumentException |IOException e) {
 			e.printStackTrace();
 		} 
+		
+		return getPdfNameWithDate();
 
 	}
 
