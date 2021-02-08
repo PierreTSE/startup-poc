@@ -25,95 +25,95 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class ManagerControllerTest {
 
-	@Autowired
-	private MockMvc mvc;
-	@Autowired
-	private ManagerRepository managerRepository;
+    @Autowired
+    private MockMvc mvc;
+    @Autowired
+    private ManagerRepository managerRepository;
 
-	@WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void getAllManagerTest() throws Exception {
-		mvc.perform(get("/managers").contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$", hasSize(2)))
-				.andExpect(jsonPath("$.[0].firstname", is("manager1")));
-	}
+    @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void getAllManagerTest() throws Exception {
+        mvc.perform(get("/managers").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$.[0].firstname", is("manager1")));
+    }
 
-	@WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void getAllManagerTest2() throws Exception {
-		mvc.perform(get("/managers").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
-	}
+    @WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void getAllManagerTest2() throws Exception {
+        mvc.perform(get("/managers").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
+    }
 
-	@WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void getAllManagerTest3() throws Exception {
-		mvc.perform(get("/managers").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
-	}
+    @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void getAllManagerTest3() throws Exception {
+        mvc.perform(get("/managers").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
+    }
 
-	@WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void getManagerByIdTest1() throws Exception {
+    @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void getManagerByIdTest1() throws Exception {
 
-		Long id = managerRepository.findAll().get(0).getId();
+        Long id = managerRepository.findAll().get(0).getId();
 
-		mvc.perform(get("/managers/" + id).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
-				.andExpect(jsonPath("$.firstname", is("manager1")));
-	}
+        mvc.perform(get("/managers/" + id).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstname", is("manager1")));
+    }
 
-	@WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void getManagerByIdTest2() throws Exception {
+    @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void getManagerByIdTest2() throws Exception {
 
-		Long id = managerRepository.findAll().get(0).getId();
+        Long id = managerRepository.findAll().get(0).getId();
 
-		mvc.perform(get("/managers/" + id).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
-				.andExpect(jsonPath("$.firstname", is("manager1")));
-	}
+        mvc.perform(get("/managers/" + id).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstname", is("manager1")));
+    }
 
-	@WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void getManagerByIdTest3() throws Exception {
+    @WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void getManagerByIdTest3() throws Exception {
 
-		Long id = managerRepository.findAll().get(0).getId();
+        Long id = managerRepository.findAll().get(0).getId();
 
-		mvc.perform(get("/managers/" + id).contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isUnauthorized());
-	}
+        mvc.perform(get("/managers/" + id).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
 
-	@WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void postManagerTest() throws Exception {
+    @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void postManagerTest() throws Exception {
 
-		Manager manager = new Manager("John", "Doe");
-		int size = this.managerRepository.findAll().size();
-		mvc.perform(post("/managers").content(Utils.asJsonString(manager)).accept(MediaType.APPLICATION_JSON)
-				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
+        Manager manager = new Manager("John", "Doe");
+        int size = this.managerRepository.findAll().size();
+        mvc.perform(post("/managers").content(Utils.asJsonString(manager)).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
 
-		assertEquals(size + 1, this.managerRepository.findAll().size());
-	}
+        assertEquals(size + 1, this.managerRepository.findAll().size());
+    }
 
-	@WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void postManagerTest2() throws Exception {
+    @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void postManagerTest2() throws Exception {
 
-		Manager manager = new Manager("John", "Doe");
-		mvc.perform(post("/managers").content(Utils.asJsonString(manager)).accept(MediaType.APPLICATION_JSON)
-				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
+        Manager manager = new Manager("John", "Doe");
+        mvc.perform(post("/managers").content(Utils.asJsonString(manager)).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
 
-	}
+    }
 
-	@WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
-	@Test
-	public void deleteUserTest() throws Exception {
-		Manager manager = managerRepository.save(new Manager("John", "Doe"));
+    @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @Test
+    public void deleteUserTest() throws Exception {
+        Manager manager = managerRepository.save(new Manager("John", "Doe"));
 
-		int size = this.managerRepository.findAll().size();
+        int size = this.managerRepository.findAll().size();
 
-		mvc.perform(delete("/managers/" + manager.getId())
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk());
+        mvc.perform(delete("/managers/" + manager.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
-		assertEquals(size - 1, this.managerRepository.findAll().size());
-	}
+        assertEquals(size - 1, this.managerRepository.findAll().size());
+    }
 }
