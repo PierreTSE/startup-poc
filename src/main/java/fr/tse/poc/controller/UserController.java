@@ -124,15 +124,13 @@ public class UserController {
 				newManager = managerRepository.findById(parseLong(params.get("manager"))).orElseThrow();
 			} catch (NoSuchElementException e) {
 				log.error(e.getMessage());
-				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(userRepository.save(user), HttpStatus.BAD_REQUEST);
 			}
 
 			switch (userDetails.getRole()) {
 				case Admin:
 					user.setManager(newManager);
-					// todo patchUserTest1
-					// userRepository.save(user);
-					return new ResponseEntity<>(user, HttpStatus.OK);
+					return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
 				case Manager:
 				case User:
 				default:
