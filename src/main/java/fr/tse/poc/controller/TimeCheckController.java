@@ -32,10 +32,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.tse.poc.authentication.AuthenticableUserDetails;
 import fr.tse.poc.authentication.Role;
-import fr.tse.poc.dao.ManagedRepository;
 import fr.tse.poc.dao.ManagerRepository;
 import fr.tse.poc.dao.ProjectRepository;
 import fr.tse.poc.dao.TimeCheckRepository;
+import fr.tse.poc.dao.UserRepository;
 import fr.tse.poc.domain.Project;
 import fr.tse.poc.domain.TimeCheck;
 import fr.tse.poc.domain.User;
@@ -49,7 +49,7 @@ public class TimeCheckController {
 	@Autowired
 	private TimeCheckRepository timeRepo;
 	@Autowired
-	private ManagedRepository userRepo;
+	private UserRepository userRepo;
 	@Autowired
 	private ProjectRepository projectRepo;
 	@Autowired

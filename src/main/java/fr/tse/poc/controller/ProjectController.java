@@ -24,10 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.tse.poc.authentication.AuthenticableUserDetails;
 import fr.tse.poc.authentication.Role;
-import fr.tse.poc.dao.ManagedRepository;
 import fr.tse.poc.dao.ManagerRepository;
 import fr.tse.poc.dao.ProjectRepository;
 import fr.tse.poc.dao.TimeCheckRepository;
+import fr.tse.poc.dao.UserRepository;
 import fr.tse.poc.domain.Manager;
 import fr.tse.poc.domain.Project;
 import fr.tse.poc.domain.TimeCheck;
@@ -46,7 +46,7 @@ public class ProjectController {
 	private TimeCheckRepository timeRepo;
 	
 	@Autowired
-	private ManagedRepository userRepo;
+	private UserRepository userRepo;
 	
 	/*
 	 * Returns all projects
@@ -62,7 +62,7 @@ public class ProjectController {
 			return new ResponseEntity<>( manRepo.getOne(userDetails.getForeignId()).getProjects(),HttpStatus.OK);
 		case User : 
 			ArrayList<Project> projs = new ArrayList<Project>();
-			projs.add( userRepo.getOne(userDetails.getForeignId()).getProject());
+			projs.addAll( userRepo.getOne(userDetails.getForeignId()).getProjects());
 			return new ResponseEntity<>(projs,HttpStatus.OK);
 			default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
@@ -87,7 +87,8 @@ public class ProjectController {
 				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 			}
 		case User :
-			if (userRepo.getOne(userDetails.getForeignId()).getProject().getId() == id) {
+			theProj = repo.getOne(id);
+			if (userRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {
 				return new ResponseEntity<>(repo.getOne(id),HttpStatus.OK);
 			}
 			else {
@@ -110,6 +111,11 @@ public class ProjectController {
 			Project theProj = repo.getOne(id);
 			if ( manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj))
 			{
+				for (User user : theProj.getUsers()) {
+					user.getProjects().remove(theProj);
+					userRepo.save(user);
+				}
+				
 				repo.deleteById(id);
 				return new ResponseEntity<>(HttpStatus.OK);
 			}
@@ -117,13 +123,8 @@ public class ProjectController {
 				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 			}
 		case User :
-			if (userRepo.getOne(userDetails.getForeignId()).getProject().getId() == id) {
-				repo.deleteById(id);
-				return new ResponseEntity<>(HttpStatus.OK);
-			}
-			else {
-				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-			}
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+			
 		default: return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 		
@@ -143,7 +144,8 @@ public class ProjectController {
 			Optional<Manager> man = manRepo.findById(userDetails.getForeignId());
 			
 			if (man.isPresent()) {
-				Project pro = new Project(projectName, man.get() );
+				Project pro = new Project(projectName );
+				pro.setManager( man.get());
 				return new ResponseEntity<>(repo.save(pro),HttpStatus.OK);
 			}
 			else {
@@ -221,7 +223,7 @@ public class ProjectController {
 				if (add) {
 					params.forEach(user ->{
 						if (managed.contains(user)) {
-							user.setProject(myProj);
+							user.addProject(myProj);
 							userRepo.save(user);
 							userList.add(user);
 						}
@@ -230,7 +232,7 @@ public class ProjectController {
 				else {
 					params.forEach(user ->{
 						if (managed.contains(user)) {
-							user.setProject(null);
+							user.removeProject(myProj);
 							userRepo.save(user);
 							userList.remove(user);
 						}
