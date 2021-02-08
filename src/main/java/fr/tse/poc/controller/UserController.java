@@ -135,8 +135,7 @@ public class UserController {
 				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 			}
 			user.setManager(newManager);
-			userRepository.save(user);
-			return new ResponseEntity<>(user, HttpStatus.OK);
+			return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 		}
