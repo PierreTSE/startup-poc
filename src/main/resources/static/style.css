@@ -11,6 +11,6 @@ html, body, .v-fill {
     cursor: pointer;
 }
 
-.nav-link.active {
+.nav-link.active, .modal-body .active {
     color: #007bff;
 }

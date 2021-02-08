@@ -1,8 +1,9 @@
 package fr.tse.poc.controller;
 
 import fr.tse.poc.authentication.AuthenticableUserDetails;
-import fr.tse.poc.authentication.Role;
 import fr.tse.poc.dao.AdminRepository;
+import fr.tse.poc.dao.ManagerRepository;
+import fr.tse.poc.dao.UserRepository;
 import fr.tse.poc.exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -14,50 +15,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class ViewController {
     @Autowired AdminRepository adminRepository;
+    @Autowired ManagerRepository managerRepository;
+    @Autowired UserRepository userRepository;
 
 
     @RequestMapping("/home")
-    public String home(Authentication authentication) {
+    public String home(Model model, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+
+        model.addAttribute("role", userDetails.getRole().toString());
+
         switch (userDetails.getRole()) {
             case Admin:
+                model.addAttribute("name", adminRepository.findById(userDetails.getForeignId()).orElseThrow().getFullName());
                 return "admin";
             case Manager:
+                model.addAttribute("name", managerRepository.findById(userDetails.getForeignId()).orElseThrow().getFullName());
                 return "manager";
             case User:
+                model.addAttribute("name", userRepository.findById(userDetails.getForeignId()).orElseThrow().getFullName());
                 return "user";
             default:
                 throw new UnauthorizedException("Unrecognized role", userDetails);
         }
-    }
-
-    @RequestMapping("/admin")
-    public String admin(Model model, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        if (userDetails.getRole() != Role.Admin) {
-            throw new UnauthorizedException("Only Admin role is authorized.", userDetails);
-        }
-        model.addAttribute("role", userDetails.getRole().toString());
-        model.addAttribute("name", adminRepository.findById(userDetails.getForeignId()).orElseThrow().getFullName());
-        return "admin";
-    }
-
-    @RequestMapping("/manager")
-    public String manager(Model model, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        if (userDetails.getRole() != Role.Manager) {
-            throw new UnauthorizedException("Only Manager role is authorized.", userDetails);
-        }
-        return "manager";
-    }
-
-    @RequestMapping("/user")
-    public String user(Model model, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        if (userDetails.getRole() != Role.User) {
-            throw new UnauthorizedException("Only User role is authorized.", userDetails);
-        }
-        return "user";
     }
 
     @ExceptionHandler(UnauthorizedException.class)

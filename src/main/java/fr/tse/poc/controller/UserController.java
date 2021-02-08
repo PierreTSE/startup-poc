@@ -33,10 +33,10 @@ public class UserController {
 	AdminRepository adminRepository;
 
 	@PostMapping(path = "/users")
-	public ResponseEntity<User> addUser(@RequestBody User user, Authentication authentication) {
+	public ResponseEntity<User> addUser(@RequestBody User user, @RequestBody(required = false) long managerID, Authentication authentication) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-		Manager manager = null;
+		Manager manager;
 
 		switch (userDetails.getRole()) {
 			case Manager:
@@ -45,6 +45,12 @@ public class UserController {
 				user.setManager(manager);
 				return new ResponseEntity<>(userRepository.save(user), HttpStatus.CREATED);
 			case Admin:
+				try {
+					manager = managerRepository.findById(managerID).orElseThrow();
+				} catch (NoSuchElementException e) {
+					log.error(e.getMessage());
+					return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+				}
 				return new ResponseEntity<>(userRepository.save(user), HttpStatus.CREATED);
 			case User:
 			default:
