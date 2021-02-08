@@ -1,0 +1,16 @@
+html, body, .v-fill {
+    height: 100%;
+    min-height: 100%;
+}
+
+.h-fill {
+    width: 100%;
+}
+
+#people .nav-item {
+    cursor: pointer;
+}
+
+.nav-link.active {
+    color: #007bff;
+}
