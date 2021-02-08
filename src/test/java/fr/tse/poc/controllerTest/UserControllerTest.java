@@ -5,7 +5,6 @@ import fr.tse.poc.dao.ManagerRepository;
 import fr.tse.poc.dao.UserRepository;
 import fr.tse.poc.domain.Manager;
 import fr.tse.poc.domain.User;
-import fr.tse.poc.service.UserService;
 import fr.tse.poc.utils.Utils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +36,12 @@ public class UserControllerTest {
     private ManagerRepository managerRepository;
     @Autowired
     private AdminRepository adminRepository;
-    @Autowired
-    private UserService userService;
 
     @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void getAllUserTest() throws Exception {
+        System.out.println(userRepository.findAll());
+
         mvc.perform(get("/users")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -91,7 +90,7 @@ public class UserControllerTest {
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void postUserTest() throws Exception {
-        User user = new User("John", "Doe");
+        User user = new User("John", "postUserTest");
         int size = this.userRepository.findAll().size();
         mvc.perform(post("/users")
                 .content(Utils.asJsonString(user))
@@ -100,13 +99,13 @@ public class UserControllerTest {
                 .andExpect(status().isCreated());
 
         assertEquals(size + 1, this.userRepository.findAll().size());
-        userRepository.delete(user);
+        userRepository.deleteById(4L);
     }
 
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void deleteUserTest() throws Exception {
-        User user = userRepository.save(new User("John", "Doe", managerRepository.findById(1L).orElseThrow()));
+        User user = userRepository.save(new User("John", "deleteUserTest", managerRepository.findById(1L).orElseThrow()));
         int size = this.userRepository.findAll().size();
 
         mvc.perform(delete("/users/" + user.getId())
@@ -138,16 +137,18 @@ public class UserControllerTest {
     @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void patchUserTest2() throws Exception {
-        User user = userRepository.save(new User("John", "Doe", managerRepository.getOne(1L)));
+        User user = userRepository.save(new User("John", "patchUserTest2", managerRepository.getOne(1L)));
 
-        int size = adminRepository.findAll().size();
+        int sizeAdmins = adminRepository.findAll().size();
+        int sizeUsers = userRepository.findAll().size();
 
         mvc.perform(patch("/users/" + user.getId())
                 .content("{\"status\":\"Admin\"}")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        assertEquals(size + 1, adminRepository.findAll().size());
+        assertEquals(sizeUsers - 1, userRepository.findAll().size());
+        assertEquals(sizeAdmins + 1, adminRepository.findAll().size());
         adminRepository.deleteById(2L);
     }
 }
