@@ -11,6 +11,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class ViewController {
+    @RequestMapping("/home")
+    public String home(Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        switch (userDetails.getRole()) {
+            case Admin:
+                return "admin";
+            case Manager:
+                return "manager";
+            case User:
+                return "user";
+            default:
+                throw new UnauthorizedException("Unrecognized role", userDetails);
+        }
+    }
+
     @RequestMapping("/admin")
     public String admin(Model model, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
