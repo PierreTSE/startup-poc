@@ -24,7 +24,7 @@ public class CredentialsController {
         return Map.of(
                 "username", userDetails.getUsername(),
                 "password", userDetails.getPassword(),
-                "role", userDetails.getRole(),
+                "role", userDetails.getRole().toString(),
                 "foreignID", userDetails.getForeignId().toString()
         );
     }
