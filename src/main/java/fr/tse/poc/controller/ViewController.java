@@ -2,7 +2,9 @@ package fr.tse.poc.controller;
 
 import fr.tse.poc.authentication.AuthenticableUserDetails;
 import fr.tse.poc.authentication.Role;
+import fr.tse.poc.dao.AdminRepository;
 import fr.tse.poc.exceptions.UnauthorizedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class ViewController {
+    @Autowired AdminRepository adminRepository;
+
+
     @RequestMapping("/home")
     public String home(Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
@@ -32,6 +37,8 @@ public class ViewController {
         if (userDetails.getRole() != Role.Admin) {
             throw new UnauthorizedException("Only Admin role is authorized.", userDetails);
         }
+        model.addAttribute("role", userDetails.getRole().toString());
+        model.addAttribute("name", adminRepository.findById(userDetails.getForeignId()).orElseThrow().getFullName());
         return "admin";
     }
 
