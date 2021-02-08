@@ -1,0 +1,46 @@
+package fr.tse.poc.controller;
+
+import fr.tse.poc.authentication.AuthenticableUserDetails;
+import fr.tse.poc.authentication.Role;
+import fr.tse.poc.exceptions.UnauthorizedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+public class ViewController {
+    @RequestMapping("/admin")
+    public String admin(Model model, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        if (userDetails.getRole() != Role.Admin) {
+            throw new UnauthorizedException("Only Admin role is authorized.", userDetails);
+        }
+        return "admin";
+    }
+
+    @RequestMapping("/manager")
+    public String manager(Model model, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        if (userDetails.getRole() != Role.Manager) {
+            throw new UnauthorizedException("Only Manager role is authorized.", userDetails);
+        }
+        return "manager";
+    }
+
+    @RequestMapping("/user")
+    public String user(Model model, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        if (userDetails.getRole() != Role.User) {
+            throw new UnauthorizedException("Only User role is authorized.", userDetails);
+        }
+        return "user";
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public String unauthorized(UnauthorizedException e, Model model) {
+        model.addAttribute("name", e.authenticableUserDetails.getUsername());
+        return "unauthorized";
+    }
+}
