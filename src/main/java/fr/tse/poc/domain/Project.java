@@ -3,6 +3,7 @@ package fr.tse.poc.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.*;
@@ -11,6 +12,7 @@ import java.util.Set;
 
 @Data
 @Entity
+@NoArgsConstructor
 public class Project {
     private @Id @GeneratedValue Long id;
 
