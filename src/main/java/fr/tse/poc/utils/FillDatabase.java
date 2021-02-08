@@ -1,12 +1,5 @@
 package fr.tse.poc.utils;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import fr.tse.poc.authentication.AuthenticableUser;
 import fr.tse.poc.authentication.AuthenticableUserRepository;
 import fr.tse.poc.authentication.Role;
@@ -19,6 +12,12 @@ import fr.tse.poc.domain.Manager;
 import fr.tse.poc.domain.Project;
 import fr.tse.poc.domain.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 @Slf4j
@@ -47,7 +46,7 @@ public class FillDatabase {
             initAdmin();
         };
     }
-    
+
     private void initUser(User user) {
         AuthenticableUser authenticableUser = new AuthenticableUser(
                 "user",
@@ -56,7 +55,7 @@ public class FillDatabase {
                 user.getId());
         authenticableUserRepository.save(authenticableUser);
     }
-    
+
     private void initManager(Manager manager) {
         AuthenticableUser authenticableUser = new AuthenticableUser(
                 "manager",
@@ -75,26 +74,26 @@ public class FillDatabase {
             initAdmin();
 
             User user1 = new User("Jean", "Bon");
-            Manager manager1 = new Manager("Jeremy","Monslip");
-            
+            Manager manager1 = new Manager("Jeremy", "Monslip");
+
             managerRepository.save(manager1);
             log.info(manager1.getFullName() + " saved to database.");
-            
+
             user1.setManager(managerRepository.getOne(manager1.getId()));
-            
+
             userRepository.save(user1);
             log.info(user1.getFullName() + " saved to database.");
-            
+
             initUser(user1);
-            initManager(manager1);  
+            initManager(manager1);
             log.info("Manager and user logins saved to database.");
 
-            
+
             User user2 = new User("Sarah", "Fraichit");
             userRepository.save(user2);
             log.info(user2.getFullName() + " saved to database.");
-            
-            Project projet1=new Project();
+
+            Project projet1 = new Project();
             projet1.setName("Death Star");
             projet1.setManager(manager1);
             projet1.getUsers().add(user1);

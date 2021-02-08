@@ -21,6 +21,19 @@ public class ManagerController {
     @Autowired
     ManagerRepository managerRepository;
 
+    @PostMapping(path = "/managers")
+    public ResponseEntity<Manager> addManager(@Valid @RequestBody Manager manager, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        switch (userDetails.getRole()) {
+            case Admin:
+                return new ResponseEntity<>(managerRepository.save(manager), HttpStatus.CREATED);
+            case Manager:
+            case User:
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
     @GetMapping(path = "/managers")
     public ResponseEntity<Collection<Manager>> getManagers(Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
@@ -48,20 +61,6 @@ public class ManagerController {
         }
     }
 
-    @PostMapping(path = "/managers")
-    public ResponseEntity<Manager> addManager(@Valid @RequestBody Manager manager, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(managerRepository.save(manager), HttpStatus.CREATED);
-            case Manager:
-            case User:
-            default:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-    }
-
     @DeleteMapping(path = "/managers/{id}")
     public ResponseEntity<Void> deleteManager(@PathVariable long id, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
@@ -75,6 +74,4 @@ public class ManagerController {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
-    
-    
 }
