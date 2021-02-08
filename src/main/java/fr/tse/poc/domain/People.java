@@ -18,12 +18,12 @@ import javax.validation.constraints.NotNull;
 public class People {
     @EqualsAndHashCode.Include
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    protected Long id;
 
     @NotNull @NotEmpty
-    private String firstname;
+    protected String firstname;
     @NotNull @NotEmpty
-    private String lastname;
+    protected String lastname;
 
     public People(String firstname, String lastname) {
         this.firstname = firstname;

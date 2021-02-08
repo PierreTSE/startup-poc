@@ -18,7 +18,7 @@ import java.util.Set;
 @ToString(onlyExplicitlyIncluded = true)
 @Entity
 @Table(indexes = {
-        @Index(name = "manager_index", columnList = "manager_id")
+        @Index(name = "project_manager_index", columnList = "manager_id")
 })
 public class Project {
     @EqualsAndHashCode.Include
@@ -32,7 +32,6 @@ public class Project {
 
     @NotNull
     @ManyToOne
-    @JsonIgnore
     private Manager manager;
 
     @ManyToMany(fetch = FetchType.EAGER)

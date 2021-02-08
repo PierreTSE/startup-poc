@@ -14,8 +14,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(indexes = {
-        @Index(name = "user_index", columnList = "user_id"),
-        @Index(name = "project_index", columnList = "project_id")
+        @Index(name = "timecheck_user_index", columnList = "user_id"),
+        @Index(name = "timecheck_project_index", columnList = "project_id")
 }
 )
 public class TimeCheck {

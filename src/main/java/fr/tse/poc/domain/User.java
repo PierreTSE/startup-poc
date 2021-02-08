@@ -17,12 +17,11 @@ import java.util.Set;
 @ToString(onlyExplicitlyIncluded = true)
 @Entity
 @Table(indexes = {
-        @Index(name = "manager_index", columnList = "manager_id")
+        @Index(name = "user_manager_index", columnList = "manager_id")
 })
 public class User extends People {
     @NotNull
     @ManyToOne
-    @JsonIgnore
     private Manager manager;
 
     @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
@@ -35,6 +34,11 @@ public class User extends People {
 
     public User(String firstname, String lastname) {
         super(firstname, lastname);
+    }
+
+    public User(String firstname, String lastname, @NotNull Manager manager) {
+        super(firstname, lastname);
+        this.manager = manager;
     }
 
     // manager field managed by its accessors

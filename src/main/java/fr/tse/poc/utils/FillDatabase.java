@@ -60,7 +60,7 @@ public class FillDatabase {
     }
 
     private void initAdmin() {
-        Admin admin = new Admin("admin-firstname", "admin-lastname");
+        Admin admin = new Admin("admin", "admin-lastname");
         adminRepository.save(admin);
         saveCredentials(admin, Role.Admin);
     }
@@ -103,16 +103,16 @@ public class FillDatabase {
         Manager manager1 = managerRepository.findById(1L).orElseThrow();
         Manager manager2 = managerRepository.findById(2L).orElseThrow();
 
-        Project projectEmpty = new Project("project-empty");
+        Project projectEmpty = new Project("project empty");
         projectEmpty.setManager(manager1);
         projectRepository.save(projectEmpty);
 
-        Project projectOneUser = new Project("project-1 users");
+        Project projectOneUser = new Project("project 1 users");
         projectOneUser.setManager(manager1);
         projectOneUser.addUser(user1);
         projectRepository.save(projectOneUser);
 
-        Project projectTwoUser = new Project("project-2 users");
+        Project projectTwoUser = new Project("project 2 users");
         projectTwoUser.setManager(manager2);
         projectTwoUser.addUser(user2);
         projectTwoUser.addUser(user3);

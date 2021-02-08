@@ -108,11 +108,11 @@ public class UserController {
 			switch (params.get("status")) {
 				case "Admin":
 					userRepository.deleteById(user.getId());
-					Admin newAdmin = new Admin(user);
+					Admin newAdmin = new Admin(user.getFirstname(), user.getLastname());
 					return new ResponseEntity<>(adminRepository.save(newAdmin), HttpStatus.NO_CONTENT);
 				case "Manager":
 					userRepository.deleteById(user.getId());
-					Manager newManager = new Manager(user);
+					Manager newManager = new Manager(user.getFirstname(), user.getLastname());
 					return new ResponseEntity<>(managerRepository.save(newManager), HttpStatus.NO_CONTENT);
 				default:
 					return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -130,6 +130,8 @@ public class UserController {
 			switch (userDetails.getRole()) {
 				case Admin:
 					user.setManager(newManager);
+					// todo patchUserTest1
+					// userRepository.save(user);
 					return new ResponseEntity<>(user, HttpStatus.OK);
 				case Manager:
 				case User:
