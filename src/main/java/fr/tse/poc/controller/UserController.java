@@ -9,7 +9,6 @@ import fr.tse.poc.domain.Admin;
 import fr.tse.poc.domain.Manager;
 import fr.tse.poc.domain.People;
 import fr.tse.poc.domain.User;
-import fr.tse.poc.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,7 +31,6 @@ public class UserController {
 	UserRepository userRepository;
 	@Autowired
 	AdminRepository adminRepository;
-	@Autowired UserService userService;
 
 	@PostMapping(path = "/users")
 	public ResponseEntity<User> addUser(@RequestBody User user, Authentication authentication) {
@@ -43,7 +41,7 @@ public class UserController {
 		switch (userDetails.getRole()) {
 			case Manager:
 				// Put authentified manager as this user's manager
-				manager = managerRepository.getOne(userDetails.getForeignId());
+				manager = managerRepository.findById(userDetails.getForeignId()).orElseThrow();
 				user.setManager(manager);
 				return new ResponseEntity<>(userRepository.save(user), HttpStatus.CREATED);
 			case Admin:
@@ -96,6 +94,15 @@ public class UserController {
 											 @RequestBody Map<String, String> params,
 											 Authentication authentication) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+		switch (userDetails.getRole()) {
+			case Admin:
+				break;
+			case Manager:
+			case User:
+			default:
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
+
 		// find user
 		User user = null;
 		try {
@@ -104,15 +111,16 @@ public class UserController {
 			log.error(e.getMessage());
 			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 		}
+
 		if (params.containsKey("status")) {
 			switch (params.get("status")) {
 				case "Admin":
 					userRepository.deleteById(user.getId());
-					Admin newAdmin = new Admin(user);
+					Admin newAdmin = new Admin(user.getFirstname(), user.getLastname());
 					return new ResponseEntity<>(adminRepository.save(newAdmin), HttpStatus.NO_CONTENT);
 				case "Manager":
 					userRepository.deleteById(user.getId());
-					Manager newManager = new Manager(user);
+					Manager newManager = new Manager(user.getFirstname(), user.getLastname());
 					return new ResponseEntity<>(managerRepository.save(newManager), HttpStatus.NO_CONTENT);
 				default:
 					return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -126,16 +134,8 @@ public class UserController {
 				log.error(e.getMessage());
 				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 			}
-
-			switch (userDetails.getRole()) {
-				case Admin:
-					user.setManager(newManager);
-					return new ResponseEntity<>(user, HttpStatus.OK);
-				case Manager:
-				case User:
-				default:
-					return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-			}
+			user.setManager(newManager);
+			return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 		}

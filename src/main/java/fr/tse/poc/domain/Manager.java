@@ -1,42 +1,52 @@
 package fr.tse.poc.domain;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @Entity
 public class Manager extends People {
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "manager", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("manager")
+    @JsonIgnore
     private Set<User> users = new HashSet<>();
 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "manager", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("manager")
+    @JsonIgnore
     private Set<Project> projects = new HashSet<>();
 
     public Manager(String firstname, String lastname) {
         super(firstname, lastname);
     }
-    public Manager(User user) {
-    	this.setFirstname(user.getFirstname());
-    	this.setLastname(user.getLastname());
+
+    public void addUser(User user) {
+        users.add(user);
+        user.setManager(this);
+    }
+
+    public void removeUser(User user) {
+        users.remove(user);
+        user.setManager(null);
+    }
+
+    public void addProject(Project project) {
+        projects.add(project);
+        project.setManager(this);
+    }
+
+    public void removeProject(Project project) {
+        projects.remove(project);
+        project.setManager(null);
     }
 }
