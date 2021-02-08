@@ -208,12 +208,14 @@ public class TimeCheckController {
 	 * if called by a manager, either :
 	 * the body of the request contains a list of user the their timestamps are sent
 	 * there is no body and timestamps form all managed users are sent
+	 * 
+	 * Optional values startDate & endDate to select within a time range
 	 * @param usersId
 	 * @param authentication
 	 * @return
 	 */
 	@GetMapping(path="/TimeCheck/export")
-	public ResponseEntity<Resource> ExportPdf(@RequestPart(value ="users") Optional<List<Long>> usersId, Authentication authentication){		
+	public ResponseEntity<Resource> ExportPdf(@RequestPart(value ="users") Optional<List<Long>> usersId,@RequestPart(value="startDate") Optional<Float> startDate, @RequestPart(value="endDate") Optional<Float> endDate,  Authentication authentication){		
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 		PDFGenerator pDFGenerator = new PDFGenerator();
 
@@ -227,14 +229,52 @@ public class TimeCheckController {
 			for (Long id : usersId.get()) {
 				User myUser =  userRepo.getOne(id);
 				if (managed.contains(myUser)) {
-					time.addAll(myUser.getTimeChecks());
+					Set<TimeCheck> userTime =  new HashSet<>(myUser.getTimeChecks());
+					if (startDate.isPresent()) {
+						Iterator<TimeCheck> i = userTime.iterator();
+						while (i.hasNext()) {
+						   TimeCheck timei = i.next(); // must be called before you can call i.remove()
+						   if (timei.getTime() < startDate.get()) {
+							   i.remove();
+						   }
+						}
+					}
+					if (endDate.isPresent()) {
+						Iterator<TimeCheck> i = userTime.iterator();
+						while (i.hasNext()) {
+						   TimeCheck timei = i.next(); // must be called before you can call i.remove()
+						   if (timei.getTime() < endDate.get()) {
+							   i.remove();
+						   }
+						}
+					}
+					time.addAll(userTime);
 				}
 			}
 			}
 			else {
 				for (User user : managed ) {
-					time.addAll(user.getTimeChecks());
 					
+					Set<TimeCheck> userTime =  new HashSet<>(user.getTimeChecks());
+					if (startDate.isPresent()) {
+						Iterator<TimeCheck> i = userTime.iterator();
+						while (i.hasNext()) {
+						   TimeCheck timei = i.next(); // must be called before you can call i.remove()
+						   if (timei.getTime() < startDate.get()) {
+							   i.remove();
+						   }
+						}
+					}
+					if (endDate.isPresent()) {
+						Iterator<TimeCheck> i = userTime.iterator();
+						while (i.hasNext()) {
+						   TimeCheck timei = i.next(); // must be called before you can call i.remove()
+						   if (timei.getTime() < endDate.get()) {
+							   i.remove();
+						   }
+						}
+					}
+					time.addAll(userTime);					
 				}
 			}
 
@@ -253,8 +293,25 @@ public class TimeCheckController {
 					.body(resource);
 
 		case User :
-			Set<TimeCheck> timeUser =  (userRepo.getOne(userDetails.getForeignId())).getTimeChecks();
-			
+			Set<TimeCheck> timeUser =  new HashSet<>(userRepo.getOne(userDetails.getForeignId()).getTimeChecks());
+			if (startDate.isPresent()) {
+				Iterator<TimeCheck> i = timeUser.iterator();
+				while (i.hasNext()) {
+				   TimeCheck timei = i.next(); // must be called before you can call i.remove()
+				   if (timei.getTime() < startDate.get()) {
+					   i.remove();
+				   }
+				}
+			}
+			if (endDate.isPresent()) {
+				Iterator<TimeCheck> i = timeUser.iterator();
+				while (i.hasNext()) {
+				   TimeCheck timei = i.next(); // must be called before you can call i.remove()
+				   if (timei.getTime() < endDate.get()) {
+					   i.remove();
+				   }
+				}
+			}
 			filePath  = pDFGenerator.generatePdfReport(timeUser);
 			
 			path = Paths.get(filePath);
