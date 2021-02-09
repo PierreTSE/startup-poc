@@ -1,24 +1,25 @@
-
 function updateNavList(element, domID) {
+
     let li = document.createElement('li')
     li.classList.add("nav-item")
     let div = document.createElement('div')
     div.classList.add('nav-link')
-    div.innerText = element.name
+    div.innerText = element.fullName
+    div.setAttribute("data-role", role)
     div.setAttribute("data-id", element.id)
-    div.setAttribute("data-project-name", element.name)
-
+    div.setAttribute("data-manager-fullname", element.manager.fullName)
 
     li.appendChild(div)
     document.querySelector(domID).append(li)
     div.addEventListener('click', function () {
-        document.querySelectorAll("#projects .nav-link").forEach(div => div.classList.remove("active"))
+        document.querySelectorAll("#people .nav-link").forEach(div => div.classList.remove("active"))
         this.classList.add("active")
         let usersGestion = $("#users-gestion")
-        usersGestion.children("ul,li,h4,p").remove()
-        usersGestion.prepend($("<ul>", {
-            id: "list-users",
-            class: 'list-group',
+        usersGestion.children("h4,p").remove()
+        usersGestion.prepend($("<h4>", {
+            id: "fullname",
+            class: 'mb-3',
+            "data-role": this.getAttribute("data-role"),
             "data-id": this.getAttribute("data-id")
         }))
         let listUsers = $("#list-users")
@@ -62,7 +63,7 @@ async function fetchProjects() {
 
 
 $(document).ready(() => {
-    fetchProjects()
+    fetchUsers()
     $("#form-add-user").submit(e => {
         e.preventDefault();
         fetch("/users", {

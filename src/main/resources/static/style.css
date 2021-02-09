@@ -11,11 +11,6 @@ html, body, .v-fill {
     cursor: pointer;
 }
 
-.nav-link.active, .modal-body .active, .list-group .active {
+.nav-link.active, .modal-body .active {
     color: #007bff;
 }
-
-#gestion li {
-    list-style-type: none;
-}
-
