@@ -31,7 +31,10 @@ public class Project {
     private String name;
 
     @NotNull
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne
+    @JsonIgnore
     private Manager manager;
 
     @ManyToMany(fetch = FetchType.EAGER)
