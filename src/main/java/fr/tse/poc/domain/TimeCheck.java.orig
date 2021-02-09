@@ -30,12 +30,20 @@ public class TimeCheck {
 
     @NotNull
     @ManyToOne
+<<<<<<< HEAD
+    @JsonIgnoreProperties("timeCheck")
+=======
     @JsonIgnore
+>>>>>>> remotes/origin/develop
     private User user;
 
     @NotNull
     @ManyToOne
+<<<<<<< HEAD
+    @JsonIgnoreProperties("timeCheck")
+=======
     @JsonIgnore
+>>>>>>> remotes/origin/develop
     private Project project;
 
     public TimeCheck(double time) {
