@@ -62,7 +62,7 @@ public class ProjectController {
 
         switch (userDetails.getRole()) {
             case Admin:
-                return new ResponseEntity<>(repo.getOne(id), HttpStatus.OK);
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 Project theProj = repo.getOne(id);
                 if (manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {

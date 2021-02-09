@@ -76,7 +76,7 @@ public class ProjectControllerTest {
         mvc.perform(get("/projects/2")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[0].name", is("project 1 users")));
+                .andExpect(jsonPath("$.name", is("project 1 users")));
 
 
         mvc.perform(get("/projects/1")
@@ -90,7 +90,7 @@ public class ProjectControllerTest {
         mvc.perform(get("/projects/1")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[0].name", is("project empty")));
+                .andExpect(jsonPath("$.name", is("project empty")));
 
         mvc.perform(get("/projects/3")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -124,13 +124,13 @@ public class ProjectControllerTest {
         Project projectEmpty = new Project("project to delete");
         projectEmpty.setManager(manager1);
         projectRepository.save(projectEmpty);
+        
 
-
-        mvc.perform(delete("/projects/4")
+        mvc.perform(delete("/projects/"+ projectEmpty.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        Assertions.assertTrue(projectRepository.findById(4L).isEmpty());
+        Assertions.assertTrue(projectRepository.findById(projectEmpty.getId()).isEmpty());
 
         mvc.perform(delete("/projects/3")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -152,6 +152,7 @@ public class ProjectControllerTest {
     @Test
     public void testAddProjectUser() throws Exception {
         mvc.perform(post("/projects")
+        		.content("name , New project")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -175,6 +176,7 @@ public class ProjectControllerTest {
     @Test
     public void testAddProjectAdmin() throws Exception {
         mvc.perform(post("/projects")
+        		.content("name , New project")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -183,6 +185,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectBaseUser() throws Exception {
         mvc.perform(patch("/projects/1")
+        		.content("{ \"name\" : \"new Name\" }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -194,10 +197,11 @@ public class ProjectControllerTest {
                 .content("{ \"name\" : \"new Name\" }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[0].name", is("New Name")));
+                .andExpect(jsonPath("$.name", is("new Name")));
         projectRepository.findById(1L).get().setName("project empty");
 
         mvc.perform(patch("/projects/3")
+        		.content("{ \"name\" : \"new Name\" }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
@@ -208,6 +212,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectBaseAdmin() throws Exception {
         mvc.perform(patch("/projects/1")
+        		.content("{ \"name\" : \"new Name\" }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -217,6 +222,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectUsersUser() throws Exception {
         mvc.perform(patch("/projects/1/users")
+        		.content("users, {[2]} \n add, True ")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -225,8 +231,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectUsersManager() throws Exception {
         mvc.perform(patch("/projects/1/users")
-                .content("{ \"users\" : \"[2]\" }")
-                .content(" { \"add\" : \"True\"}")
+                .content("users, {[2]} \n add, True ")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].name", is("New Name")));
@@ -243,6 +248,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectUsersAdmin() throws Exception {
         mvc.perform(patch("/projects/1/users")
+        		 .content("users, {[2]} \n add, True ")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }

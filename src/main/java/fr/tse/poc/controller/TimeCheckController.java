@@ -42,28 +42,49 @@ public class TimeCheckController {
     @GetMapping(path = "/TimeCheck")
     public ResponseEntity<Collection<TimeCheck>> getAll(Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        if (userDetails.getRole().equals(Role.Manager)) {
-            Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+        
+        switch (userDetails.getRole()) {
+        case Admin:
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        case Manager:
+        	Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
             Collection<TimeCheck> allTime = timeRepo.findAll();
             allTime.removeIf(last -> !managed.contains(last.getUser()));
             return new ResponseEntity<>(allTime, HttpStatus.OK);
+        case User:
+        	User user = userRepo.getOne(userDetails.getForeignId());
+        	Collection<TimeCheck> TimeUser = user.getTimeChecks();
+           
+            return new ResponseEntity<>(TimeUser, HttpStatus.OK);
+            
+        default:
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
 
     @GetMapping(path = "/TimeCheck/{id}")
     public ResponseEntity<TimeCheck> getOne(Authentication authentication, @PathVariable Long id) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        if (userDetails.getRole().equals(Role.Manager)) {
-            Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
-            TimeCheck wantedTime = timeRepo.getOne(id);
-            if (managed.contains(wantedTime.getUser())) {
+        switch (userDetails.getRole()) {
+        case Admin:
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        case Manager:
+        	 Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+             TimeCheck wantedTime = timeRepo.getOne(id);
+             if (managed.contains(wantedTime.getUser())) {
+                 return new ResponseEntity<>(wantedTime, HttpStatus.OK);
+             } else {
+                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+             }
+        case User:
+        	wantedTime = timeRepo.getOne(id);
+            if (userRepo.getOne(userDetails.getForeignId()) == wantedTime.getUser()) {
                 return new ResponseEntity<>(wantedTime, HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
-        } else {
+        default:
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }

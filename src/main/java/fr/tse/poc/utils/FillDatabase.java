@@ -119,6 +119,11 @@ public class FillDatabase {
         projectRepository.save(projectTwoUser);
 
         log.info("Projects saved to database.");
+        List<Project> list = projectRepository.findAll();
+        for (Project proj : list) {
+        	log.info(proj.getName() + " : " + proj.getId());
+        }
+        
     }
 
     public void initTimeChecks() {
@@ -145,5 +150,10 @@ public class FillDatabase {
         timeCheckRepository.saveAll(timeChecks);
 
         log.info("TimeChecks saved to database.");
+        
+        List<TimeCheck> list  = timeCheckRepository.findAll();
+        for (TimeCheck time: list) {
+        	log.info(time.getId() + ", proj : " + time.getProject().getName() + ", user : "+ time.getUser().getId());
+        }
     }
 }
