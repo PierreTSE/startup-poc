@@ -24,8 +24,8 @@ function reaffect() {
         .catch(e => console.log(e))
 }
 
-function promote(role) {
-    fetch(`/users/${$("#fullname").attr('data-id')}`, {
+function promote(role, endpoint) {
+    fetch(`/${endpoint}/${$("#fullname").attr('data-id')}`, {
         method: 'PATCH',
         headers: {
             'Accept': 'application/json',
@@ -36,20 +36,16 @@ function promote(role) {
         .then(res => {
             if (res.ok) {
                 fetchUsers()
-                fetchManagers()
-            } else if (res.status === 500) {
+                fetchManagers().then($("#gestion").hide())
+            } else if (res.status === 500 && $("#fullname").attr('data-role') === 'user') {
                 alert("Le rôle de cet utilisateur ne peut pas être modifié car des Projets ou des Pointages lui sont associés.")
             }
         })
         .catch(e => console.log(e))
 }
 
-function promoteToAdmin() {
-    promote('Admin')
-}
-
 function promoteToManager() {
-    promote('Manager')
+    promote('Manager', 'users')
 }
 
 function updateNavList(element, role, domID) {
@@ -60,7 +56,8 @@ function updateNavList(element, role, domID) {
     div.innerText = element.fullName
     div.setAttribute("data-role", role)
     div.setAttribute("data-id", element.id)
-    if (role === 'user') div.setAttribute("data-manager-fullname", element.manager.fullName)
+    if (role === 'user' && element.manager)
+        div.setAttribute("data-manager-fullname", element.manager.fullName)
 
     li.appendChild(div)
     document.querySelector(domID).append(li)
@@ -78,13 +75,14 @@ function updateNavList(element, role, domID) {
         switch (this.getAttribute("data-role")) {
             case 'manager':
                 $("#btn-reaffect").hide()
-                $("#btn-promote-admin").hide()
+                $("#btn-promote-admin").show()
                 $("#btn-promote-manager").hide()
                 break;
             case 'user':
-                $("#fullname").after($('<p>', {
-                    class: 'mb-3 ml-5',
-                }).text("Managé par : " + this.getAttribute("data-manager-fullname")))
+                if (this.getAttribute("data-manager-fullname") !== null)
+                    $("#fullname").after($('<p>', {
+                        class: 'mb-3 ml-5',
+                    }).text("Managé par : " + this.getAttribute("data-manager-fullname")))
                 $("#btn-reaffect").show()
                 $("#btn-promote-admin").show()
                 $("#btn-promote-manager").show()
@@ -127,8 +125,10 @@ $(document).ready(() => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                firstname: $("#add-manager-firstname").val(),
-                lastname: $("#add-manager-lastname").val(),
+                manager: {
+                    firstname: $("#add-manager-firstname").val(),
+                    lastname: $("#add-manager-lastname").val()
+                }, password: $("#add-manager-password").val()
             })
         })
             .then(res => {
@@ -147,9 +147,12 @@ $(document).ready(() => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                firstname: $("#add-user-firstname").val(),
-                lastname: $("#add-user-lastname").val(),
-                managerID: $("#add-user-manager-id").val()
+                user: {
+                    firstname: $("#add-user-firstname").val(),
+                    lastname: $("#add-user-lastname").val()
+                },
+                managerID: $("#add-user-manager-id").val(),
+                password: $("#add-user-password").val()
             })
         })
             .then(res => {
@@ -182,5 +185,10 @@ $(document).ready(() => {
                     }))
             }))
             .catch(e => console.log(e))
+    })
+
+    $("#btn-promote-admin").click(e => {
+        e.preventDefault()
+        promote("Admin", $("#fullname").attr("data-role") + 's')
     })
 })

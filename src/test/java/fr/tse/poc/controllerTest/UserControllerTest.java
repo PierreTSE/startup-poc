@@ -16,6 +16,8 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Map;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -93,7 +95,7 @@ public class UserControllerTest {
         User user = new User("John", "postUserTest");
         int size = this.userRepository.findAll().size();
         mvc.perform(post("/users")
-                .content(Utils.asJsonString(user))
+                .content(Utils.asJsonString(Map.of("user", user, "password", "a")))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());

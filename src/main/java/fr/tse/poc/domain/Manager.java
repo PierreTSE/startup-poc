@@ -1,6 +1,7 @@
 package fr.tse.poc.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ import java.util.Set;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Manager extends People {
     @OneToMany(mappedBy = "manager", fetch = FetchType.EAGER)
     @JsonIgnore
