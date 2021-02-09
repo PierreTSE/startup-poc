@@ -31,7 +31,6 @@ public class User extends People {
     
     
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-    @JsonIgnore
     private Set<TimeCheck> timeChecks = new HashSet<>();
 
     public User(String firstname, String lastname) {
