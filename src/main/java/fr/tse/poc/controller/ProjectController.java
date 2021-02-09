@@ -118,7 +118,7 @@ public class ProjectController {
      * Add a new project With a name and a manager
      */
     @PostMapping(path = "/projects")
-    public ResponseEntity<Project> addProject(@RequestBody String projectName, Authentication authentication) {
+    public ResponseEntity<Project> addProject(@RequestPart("name") String projectName, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
         if (userDetails.getRole().equals(Role.Manager)) {
 
@@ -180,8 +180,8 @@ public class ProjectController {
     /*
      * modify a project user list by adding or deleting the list in the  body depending on the boolean add.
      */
-    @PatchMapping(path = "/projects/{id}/users/{add}")
-    public ResponseEntity<Project> modProjectUsers( @PathVariable long id, @PathVariable boolean add, @RequestBody List<Long> users,  Authentication authentication) {
+    @PatchMapping(path = "/projects/{id}/users")
+    public ResponseEntity<Project> modProjectUsers(Authentication authentication, @PathVariable long id, @RequestPart("users") List<Long> users, @RequestPart("add") boolean add) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
         if (userDetails.getRole().equals(Role.Manager)) {
 
