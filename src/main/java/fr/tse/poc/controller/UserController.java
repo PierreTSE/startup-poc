@@ -61,10 +61,20 @@ public class UserController {
 	@GetMapping(path = "/users")
 	public ResponseEntity<Collection<User>> getUsers(Authentication authentication) {
 		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-		if (userDetails.getRole().equals(Role.Admin)) {
-			return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		switch (userDetails.getRole()) {
+			case Admin:
+				return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
+			case Manager:
+				Manager manager=null;
+				try {
+					manager=managerRepository.findById(userDetails.getForeignId()).orElseThrow();
+				} catch (NoSuchElementException e) {
+					log.error(e.getMessage());
+					return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+				}
+				return new ResponseEntity<>(manager.getUsers(), HttpStatus.OK);
+			default:
+				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 		}
 	}
 
