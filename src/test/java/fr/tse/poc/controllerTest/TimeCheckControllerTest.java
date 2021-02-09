@@ -196,7 +196,7 @@ class TimeCheckControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertEquals(timeCheckRepository.findById(time1.getId()).get().getTime(), 5.0);
+        assertEquals(timeCheckRepository.findById(time1.getId()).orElseThrow().getTime(), 5.0);
 
     }
 

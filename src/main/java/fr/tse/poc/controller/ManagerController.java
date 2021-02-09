@@ -92,7 +92,7 @@ public class ManagerController {
         }
 
         // find manager
-        Manager manager = null;
+        Manager manager;
         try {
             manager = managerRepository.findById(id).orElseThrow();
         } catch (NoSuchElementException e) {

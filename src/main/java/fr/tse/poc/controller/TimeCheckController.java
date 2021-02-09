@@ -69,8 +69,6 @@ public class TimeCheckController {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
         switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
                 Collection<TimeCheck> allTime = timeRepo.findAll();
@@ -81,6 +79,7 @@ public class TimeCheckController {
                 Collection<TimeCheck> TimeUser = user.getTimeChecks();
 
                 return new ResponseEntity<>(TimeUser, HttpStatus.OK);
+            case Admin:
 
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -91,8 +90,6 @@ public class TimeCheckController {
     public ResponseEntity<TimeCheck> getTimeCheck(Authentication authentication, @PathVariable Long id) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
         switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
                 TimeCheck wantedTime = timeRepo.getOne(id);
@@ -108,6 +105,7 @@ public class TimeCheckController {
                 } else {
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
+            case Admin:
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -203,8 +201,6 @@ public class TimeCheckController {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
         switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
                 TimeCheck wantedTime = timeRepo.getOne(id);
@@ -250,6 +246,7 @@ public class TimeCheckController {
                 } else {
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
+            case Admin:
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -260,8 +257,6 @@ public class TimeCheckController {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
         switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
                 TimeCheck wantedTime = timeRepo.getOne(id);
@@ -278,6 +273,7 @@ public class TimeCheckController {
                 } else {
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
+            case Admin:
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }

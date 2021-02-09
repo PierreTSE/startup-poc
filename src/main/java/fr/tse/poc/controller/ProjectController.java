@@ -57,14 +57,12 @@ public class ProjectController {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
         switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 return new ResponseEntity<>(manRepo.getOne(userDetails.getForeignId()).getProjects(), HttpStatus.OK);
             case User:
-                ArrayList<Project> projs = new ArrayList<Project>();
-                projs.addAll(userRepo.getOne(userDetails.getForeignId()).getProjects());
+                ArrayList<Project> projs = new ArrayList<Project>(userRepo.getOne(userDetails.getForeignId()).getProjects());
                 return new ResponseEntity<>(projs, HttpStatus.OK);
+            case Admin:
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -78,8 +76,6 @@ public class ProjectController {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
         switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 Project theProj = repo.getOne(id);
                 if (manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {
@@ -94,6 +90,7 @@ public class ProjectController {
                 } else {
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
+            case Admin:
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -187,8 +184,6 @@ public class ProjectController {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
         switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
                 Project theProj = repo.getOne(id);
                 if (manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {
@@ -203,7 +198,7 @@ public class ProjectController {
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
             case User:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            case Admin:
 
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);

@@ -201,7 +201,7 @@ public class ProjectControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is("new Name")));
-        projectRepository.findById(1L).get().setName("project empty");
+        projectRepository.findById(1L).orElseThrow().setName("project empty");
 
         mvc.perform(patch("/projects/3")
                 .content("{ \"name\" : \"new Name\" }")

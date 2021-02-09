@@ -74,7 +74,7 @@ public class UserController {
             case Admin:
                 return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
             case Manager:
-                Manager manager = null;
+                Manager manager;
                 try {
                     manager = managerRepository.findById(userDetails.getForeignId()).orElseThrow();
                 } catch (NoSuchElementException e) {
@@ -91,7 +91,7 @@ public class UserController {
     public ResponseEntity<User> getUserById(@PathVariable long id, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-        User user = null;
+        User user;
         try {
             user = userRepository.findById(id).orElseThrow();
         } catch (NoSuchElementException e) {
@@ -129,7 +129,7 @@ public class UserController {
         }
 
         // find user
-        User user = null;
+        User user;
         try {
             user = userRepository.findById(id).orElseThrow();
         } catch (NoSuchElementException e) {
@@ -157,7 +157,7 @@ public class UserController {
             }
         } else if (params.containsKey("manager")) {
             // change user's manager
-            Manager newManager = null;
+            Manager newManager;
             try {
                 newManager = managerRepository.findById(parseLong(params.get("manager"))).orElseThrow();
             } catch (NoSuchElementException e) {
@@ -175,7 +175,7 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable long id, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-        User user = null;
+        User user;
         try {
             user = userRepository.findById(id).orElseThrow();
         } catch (NoSuchElementException e) {
