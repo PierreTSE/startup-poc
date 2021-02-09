@@ -1,6 +1,9 @@
 package fr.tse.poc.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.tse.poc.authentication.AuthenticableUserDetails;
+import fr.tse.poc.authentication.AuthenticableUserDetailsService;
+import fr.tse.poc.authentication.AuthenticableUserRepository;
 import fr.tse.poc.authentication.Role;
 import fr.tse.poc.dao.AdminRepository;
 import fr.tse.poc.dao.ManagerRepository;
@@ -25,164 +28,175 @@ import static java.lang.Long.parseLong;
 @Slf4j
 @RestController
 public class UserController {
-	@Autowired
-	ManagerRepository managerRepository;
-	@Autowired
-	UserRepository userRepository;
-	@Autowired
-	AdminRepository adminRepository;
+    final private ObjectMapper mapper = new ObjectMapper();
+    @Autowired private AdminRepository adminRepository;
+    @Autowired private ManagerRepository managerRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private AuthenticableUserDetailsService authenticableUserDetailsService;
+    @Autowired private AuthenticableUserRepository authenticableUserRepository;
 
-	@PostMapping(path = "/users")
-	public ResponseEntity<User> addUser(@RequestBody User user, @RequestBody(required = false) long managerID, Authentication authentication) {
-		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+    @PostMapping(path = "/users")
+    public ResponseEntity<User> addUser(@RequestBody Map<String, Object> body, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-		Manager manager;
+        Manager manager;
+        User user = mapper.convertValue(body.get("user"), User.class);
 
-		switch (userDetails.getRole()) {
-			case Manager:
-				// Put authentified manager as this user's manager
-				manager = managerRepository.findById(userDetails.getForeignId()).orElseThrow();
-				user.setManager(manager);
-				return new ResponseEntity<>(userRepository.save(user), HttpStatus.CREATED);
-			case Admin:
-				try {
-					manager = managerRepository.findById(managerID).orElseThrow();
-				} catch (NoSuchElementException e) {
-					log.error(e.getMessage());
-					return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-				}
-				return new ResponseEntity<>(userRepository.save(user), HttpStatus.CREATED);
-			case User:
-			default:
-				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		}
-	}
+        switch (userDetails.getRole()) {
+            case Manager:
+                // Put authentified manager as this user's manager
+                manager = managerRepository.findById(userDetails.getForeignId()).orElseThrow();
+                user.setManager(manager);
+                user = userRepository.save(user);
+                authenticableUserDetailsService.addAuthenticableUser(user, Role.User, (String) body.get("password"), true);
+                return new ResponseEntity<>(user, HttpStatus.CREATED);
+            case Admin:
+                try {
+                    manager = managerRepository.findById(Long.valueOf((String) body.get("managerID"))).orElseThrow();
+                } catch (NoSuchElementException e) {
+                    log.error(e.getMessage());
+                    return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+                }
+                user.setManager(manager);
+                user = userRepository.save(user);
+                authenticableUserDetailsService.addAuthenticableUser(user, Role.User, (String) body.get("password"), true);
+                return new ResponseEntity<>(user, HttpStatus.CREATED);
+            case User:
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
 
-	@GetMapping(path = "/users")
-	public ResponseEntity<Collection<User>> getUsers(Authentication authentication) {
-		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-		switch (userDetails.getRole()) {
-			case Admin:
-				return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
-			case Manager:
-				Manager manager=null;
-				try {
-					manager=managerRepository.findById(userDetails.getForeignId()).orElseThrow();
-				} catch (NoSuchElementException e) {
-					log.error(e.getMessage());
-					return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-				}
-				return new ResponseEntity<>(manager.getUsers(), HttpStatus.OK);
-			default:
-				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		}
-	}
+    @GetMapping(path = "/users")
+    public ResponseEntity<Collection<User>> getUsers(Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        switch (userDetails.getRole()) {
+            case Admin:
+                return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
+            case Manager:
+                Manager manager = null;
+                try {
+                    manager = managerRepository.findById(userDetails.getForeignId()).orElseThrow();
+                } catch (NoSuchElementException e) {
+                    log.error(e.getMessage());
+                    return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+                }
+                return new ResponseEntity<>(manager.getUsers(), HttpStatus.OK);
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
 
-	@GetMapping(path = "/users/{id}")
-	public ResponseEntity<User> getUserById(@PathVariable long id, Authentication authentication) {
-		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+    @GetMapping(path = "/users/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable long id, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-		User user = null;
-		try {
-			user = userRepository.findById(id).orElseThrow();
-		} catch (NoSuchElementException e) {
-			log.error(e.getMessage());
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-		}
+        User user = null;
+        try {
+            user = userRepository.findById(id).orElseThrow();
+        } catch (NoSuchElementException e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
 
-		switch (userDetails.getRole()) {
-			case Admin:
-				return new ResponseEntity<>(user, HttpStatus.OK);
-			case Manager:
-				if (managerRepository.getOne(userDetails.getForeignId()).getUsers().contains(user)) {
-					return new ResponseEntity<>(user, HttpStatus.OK);
-				} else {
-					return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-				}
-			case User:
-			default:
-				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		}
-	}
+        switch (userDetails.getRole()) {
+            case Admin:
+                return new ResponseEntity<>(user, HttpStatus.OK);
+            case Manager:
+                if (managerRepository.getOne(userDetails.getForeignId()).getUsers().contains(user)) {
+                    return new ResponseEntity<>(user, HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                }
+            case User:
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
 
-	@PatchMapping(path = "/users/{id}")
-	public ResponseEntity<People> updateUser(@PathVariable long id,
-											 @RequestBody Map<String, String> params,
-											 Authentication authentication) {
-		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-		switch (userDetails.getRole()) {
-			case Admin:
-				break;
-			case Manager:
-			case User:
-			default:
-				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		}
+    @PatchMapping(path = "/users/{id}")
+    public ResponseEntity<People> updateUser(@PathVariable long id,
+                                             @RequestBody Map<String, String> params,
+                                             Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        switch (userDetails.getRole()) {
+            case Admin:
+                break;
+            case Manager:
+            case User:
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
 
-		// find user
-		User user = null;
-		try {
-			user = userRepository.findById(id).orElseThrow();
-		} catch (NoSuchElementException e) {
-			log.error(e.getMessage());
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-		}
+        // find user
+        User user = null;
+        try {
+            user = userRepository.findById(id).orElseThrow();
+        } catch (NoSuchElementException e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        String password = authenticableUserRepository.findByUsername(user.getFirstname()).getPassword();
 
-		if (params.containsKey("status")) {
-			switch (params.get("status")) {
-				case "Admin":
-					userRepository.deleteById(user.getId());
-					Admin newAdmin = new Admin(user.getFirstname(), user.getLastname());
-					return new ResponseEntity<>(adminRepository.save(newAdmin), HttpStatus.NO_CONTENT);
-				case "Manager":
-					userRepository.deleteById(user.getId());
-					Manager newManager = new Manager(user.getFirstname(), user.getLastname());
-					return new ResponseEntity<>(managerRepository.save(newManager), HttpStatus.NO_CONTENT);
-				default:
-					return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-			}
-		} else if (params.containsKey("manager")) {
-			// change user's manager
-			Manager newManager = null;
-			try {
-				newManager = managerRepository.findById(parseLong(params.get("manager"))).orElseThrow();
-			} catch (NoSuchElementException e) {
-				log.error(e.getMessage());
-				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-			}
-			user.setManager(newManager);
-			return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-		}
-	}
+        if (params.containsKey("status")) {
+            switch (params.get("status")) {
+                case "Admin":
+                    userRepository.deleteById(user.getId());
+                    Admin newAdmin = adminRepository.save(new Admin(user.getFirstname(), user.getLastname()));
+                    authenticableUserRepository.deleteById(user.getFirstname());
+                    authenticableUserDetailsService.addAuthenticableUser(newAdmin, Role.Admin, password, false);
+                    return new ResponseEntity<>(newAdmin, HttpStatus.NO_CONTENT);
+                case "Manager":
+                    userRepository.deleteById(user.getId());
+                    Manager newManager = managerRepository.save(new Manager(user.getFirstname(), user.getLastname()));
+                    authenticableUserRepository.deleteById(user.getFirstname());
+                    authenticableUserDetailsService.addAuthenticableUser(newManager, Role.Manager, password, false);
+                    return new ResponseEntity<>(newManager, HttpStatus.NO_CONTENT);
+                default:
+                    return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            }
+        } else if (params.containsKey("manager")) {
+            // change user's manager
+            Manager newManager = null;
+            try {
+                newManager = managerRepository.findById(parseLong(params.get("manager"))).orElseThrow();
+            } catch (NoSuchElementException e) {
+                log.error(e.getMessage());
+                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            }
+            user.setManager(newManager);
+            return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+    }
 
-	@DeleteMapping(path = "/users/{id}")
-	public ResponseEntity<Void> deleteUser(@PathVariable long id, Authentication authentication) {
-		AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+    @DeleteMapping(path = "/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable long id, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-		User user = null;
-		try {
-			user = userRepository.findById(id).orElseThrow();
-		} catch (NoSuchElementException e) {
-			log.error(e.getMessage());
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-		}
+        User user = null;
+        try {
+            user = userRepository.findById(id).orElseThrow();
+        } catch (NoSuchElementException e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
 
-		switch (userDetails.getRole()) {
-			case Admin:
-				userRepository.deleteById(id);
-				return new ResponseEntity<>(HttpStatus.OK);
-			case Manager:
-				if (managerRepository.getOne(userDetails.getForeignId()).getUsers().contains(user)) {
-					userRepository.deleteById(id);
-					return new ResponseEntity<>(HttpStatus.OK);
-				} else {
-					return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-				}
-			case User:
-			default:
-				return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		}
-	}
+        switch (userDetails.getRole()) {
+            case Admin:
+                userRepository.deleteById(id);
+                return new ResponseEntity<>(HttpStatus.OK);
+            case Manager:
+                if (managerRepository.getOne(userDetails.getForeignId()).getUsers().contains(user)) {
+                    userRepository.deleteById(id);
+                    return new ResponseEntity<>(HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                }
+            case User:
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
 }
