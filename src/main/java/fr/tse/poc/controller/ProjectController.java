@@ -19,21 +19,38 @@ import java.util.*;
 
 @RestController
 public class ProjectController {
+    @Autowired private ProjectRepository repo;
 
-    @Autowired
-    private ProjectRepository repo;
+    @Autowired private ManagerRepository manRepo;
+    @Autowired private TimeCheckRepository timeRepo;
+    @Autowired private UserRepository userRepo;
 
-    @Autowired
-    private ManagerRepository manRepo;
+    /**
+     * Add a new project with a name and a manager.
+     */
+    @PostMapping(path = "/projects")
+    public ResponseEntity<Project> addProject(@RequestBody String projectName, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        if (userDetails.getRole().equals(Role.Manager)) {
 
-    @Autowired
-    private TimeCheckRepository timeRepo;
+            Optional<Manager> man = manRepo.findById(userDetails.getForeignId());
 
-    @Autowired
-    private UserRepository userRepo;
+            if (man.isPresent()) {
+                Project pro = new Project(projectName);
+                pro.setManager(man.get());
+                return new ResponseEntity<>(repo.save(pro), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
 
-    /*
-     * Returns all projects
+
+        } else {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    /**
+     * Return all projects.
      */
     @GetMapping(path = "/projects")
     public ResponseEntity<Collection<Project>> getProjects(Authentication authentication) {
@@ -53,8 +70,8 @@ public class ProjectController {
         }
     }
 
-    /*
-     * return the project given by the id
+    /**
+     * Return the project by the given id.
      */
     @GetMapping(path = "/projects/{id}")
     public ResponseEntity<Project> getProjectById(@PathVariable long id, Authentication authentication) {
@@ -82,69 +99,11 @@ public class ProjectController {
         }
     }
 
-
-    @DeleteMapping(path = "/projects/{id}")
-    public ResponseEntity<Project> delProject(@PathVariable long id, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-
-        switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            case Manager:
-                Project theProj = repo.getOne(id);
-                if (manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {
-                    for (User user : theProj.getUsers()) {
-                        user.getProjects().remove(theProj);
-                        userRepo.save(user);
-                    }
-
-                    repo.deleteById(id);
-                    return new ResponseEntity<>(HttpStatus.OK);
-                } else {
-                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-                }
-            case User:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-
-            default:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-
-    }
-
-
-    /*
-     * Add a new project With a name and a manager
-     */
-    @PostMapping(path = "/projects")
-    public ResponseEntity<Project> addProject(@RequestPart("name") String projectName, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        if (userDetails.getRole().equals(Role.Manager)) {
-
-            Optional<Manager> man = manRepo.findById(userDetails.getForeignId());
-
-            if (man.isPresent()) {
-                Project pro = new Project(projectName);
-                pro.setManager(man.get());
-                return new ResponseEntity<>(repo.save(pro), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-
-
-        } else {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-
-    }
-
-    /*
-     * modify a project name or manager given by id
+    /**
+     * Update a project name or manager given by id.
      */
     @PatchMapping(path = "/projects/{id}")
-    public ResponseEntity<Project> modProjectBase(@PathVariable long id, @RequestBody Map<String, String> params, Authentication authentication) {
+    public ResponseEntity<Project> updateProject(@PathVariable long id, @RequestBody Map<String, String> params, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
         if (userDetails.getRole().equals(Role.Manager)) {
             Optional<Project> pro = repo.findById(id);
@@ -176,12 +135,11 @@ public class ProjectController {
         }
     }
 
-
     /*
-     * modify a project user list by adding or deleting the list in the  body depending on the boolean add.
+     * Update a project user list by adding or deleting the list in the body depending on the boolean add.
      */
-    @PatchMapping(path = "/projects/{id}/users")
-    public ResponseEntity<Project> modProjectUsers(Authentication authentication, @PathVariable long id, @RequestPart("users") List<Long> users, @RequestPart("add") boolean add) {
+    @PatchMapping(path = "/projects/{id}/users/{add}")
+    public ResponseEntity<Project> updateProjectUsers(@PathVariable long id, @PathVariable boolean add, @RequestBody List<Long> users, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
         if (userDetails.getRole().equals(Role.Manager)) {
 
@@ -221,6 +179,34 @@ public class ProjectController {
             }
         } else {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @DeleteMapping(path = "/projects/{id}")
+    public ResponseEntity<Project> deleteProject(@PathVariable long id, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+
+        switch (userDetails.getRole()) {
+            case Admin:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            case Manager:
+                Project theProj = repo.getOne(id);
+                if (manRepo.getOne(userDetails.getForeignId()).getProjects().contains(theProj)) {
+                    for (User user : theProj.getUsers()) {
+                        user.getProjects().remove(theProj);
+                        userRepo.save(user);
+                    }
+
+                    repo.deleteById(id);
+                    return new ResponseEntity<>(HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                }
+            case User:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
 }
