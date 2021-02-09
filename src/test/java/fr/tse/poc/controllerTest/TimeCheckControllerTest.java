@@ -58,7 +58,7 @@ class TimeCheckControllerTest {
                 .andExpect(jsonPath("$[0].id", is(4)));
     }
 
-    @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @WithUserDetails(value = "manager2", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testGetAllManager() throws Exception {
         mvc.perform(get("/TimeCheck")
@@ -88,17 +88,21 @@ class TimeCheckControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @WithUserDetails(value = "manager2", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testGetOneManager() throws Exception {
-        mvc.perform(get("/TimeCheck/4")
+        List<TimeCheck> timeList = timeCheckRepository.findAll();
+        Long id = 3L;
+        for (TimeCheck time : timeList) {
+        	if ( time.getUser().getManager().getFirstname().contentEquals("manager2")) {
+        		id= time.getId();
+        	}
+        }
+        
+    	mvc.perform(get("/TimeCheck/"+ id)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(4)));
+                .andExpect(status().isOk());
 
-        mvc.perform(get("/TimeCheck/6")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
     }
 
     @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
@@ -125,11 +129,11 @@ class TimeCheckControllerTest {
         project2.addTimeCheck(timeChecks.get(0));
         timeCheckRepository.saveAll(timeChecks);
 
-        mvc.perform(delete("/TimeCheck/10")
+        mvc.perform(delete("/TimeCheck/"+timeChecks.get(0).getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertTrue(timeCheckRepository.findById(10L).isEmpty());
+        assertTrue(timeCheckRepository.findById(timeChecks.get(0).getId()).isEmpty());
 
 
     }
@@ -153,24 +157,25 @@ class TimeCheckControllerTest {
     @WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testAddTimeUser() throws Exception {
-        
-    
-    	
+
     	mvc.perform(post("/TimeCheck")
-        		 .queryParam("projectId", "4")
-        		 .queryParam("time", "15"))
+    			.content(" { \"projectId\" : \"1\", \"time\" : \"5\" } ")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertEquals(timeCheckRepository.findById(10L).get().getUser().getLastname(), "user1");
+    	List<TimeCheck> list = timeCheckRepository.findAll();
+    	
+        assertEquals(list.get(list.size()-1).getUser().getLastname(), "user1-lastname");
 
-        timeCheckRepository.deleteById(10L);
+        timeCheckRepository.deleteById(list.get(list.size()-1).getId());
     }
 
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testAddTimeManager() throws Exception {
         mvc.perform(post("/TimeCheck")
-                .content(" projectId,{4} \n time, {15} "))
+        		.content(" { \"projectId\" : \"1\", \"time\" : \"5\" } ")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -178,7 +183,8 @@ class TimeCheckControllerTest {
     @Test
     public void testAddTimeAdmin() throws Exception {
         mvc.perform(post("/TimeCheck")
-                .content(" projectId,{4} \n time, {15} "))
+        		.content(" { \"projectId\" : \"1\", \"time\" : \"5\" } ")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -186,18 +192,21 @@ class TimeCheckControllerTest {
     @WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testModTimeUser() throws Exception {
-        mvc.perform(patch("/TimeCheck/4")
+    	TimeCheck time1 = timeCheckRepository.findAll().get(0);
+        mvc.perform(patch("/TimeCheck/"+time1.getId())
                 .content(" { \"projectId\" : \"1\", \"time\" : \"5\" } ")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertEquals(timeCheckRepository.findById(4L).get().getTime(), 5.0);
+        assertEquals(timeCheckRepository.findById(time1.getId()).get().getTime(), 5.0);
         
     }
 
-    @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
+    @WithUserDetails(value = "manager2", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testModTimeManager() throws Exception {
+    	
+    	
         mvc.perform(patch("/TimeCheck/4")
                 .content(" { \"projectId\" : \"1\", \"time\" : \"5\" } ")
                 .contentType(MediaType.APPLICATION_JSON))
