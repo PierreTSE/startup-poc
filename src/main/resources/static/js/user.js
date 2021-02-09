@@ -3,7 +3,7 @@ function updateNavList(element, role, domID) {
     li.classList.add("nav-item")
     let div = document.createElement('div')
     div.classList.add('nav-link')
-    div.innerText = element.time  + " " + element.projectId
+    div.innerText = element.time 
     div.setAttribute("data-role", role)
     div.setAttribute("data-id", element.id)
     div.setAttribute("data-time", element.time)
@@ -33,13 +33,22 @@ function updateNavList(element, role, domID) {
 
 
 function export_to_pdf(){
-	fetch("/TimeCheck/export", {
-            method: 'get'
-}) }
+	fetch("/timecheck/export", {
+            method: 'get'})
+			.then(res => res.blob())
+			.then(blob => window.open(
+				URL.createObjectURL(
+					new Blob([blob],{
+						type:'application/pdf'
+					})
+			), "_self"))
+      // handle request error
+      .catch((err) => {console.log(err); throw err});
+	}
 
 function fetchTimes() {
     $("#temps").empty()
-    return fetch("/TimeCheck")
+    return fetch("/timecheck")
         .then(res => res.json())
         .then(res => res.forEach(timeCheck => {
             updateNavList(timeCheck, 'timeCheck', "#temps")
@@ -51,20 +60,20 @@ $(document).ready(() => {
     fetchTimes()
     $("#form-add-Time").submit(e => {
         e.preventDefault();
-        fetch("/TimeCheck", {
+        fetch("/timecheck", {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                ProjectId: $("#add-Project-name").val(),
+                projectId: $("#add-Project-name").val(),
                 time: $("#add-Time").val(),
             })
         })
             .then(res => {
-                if (res.status == 201) {
-                        fetchUsers()
+                if (res.status == 200) {
+                        fetchTimes()
                 }
             })
             .catch(e => console.log(e))
