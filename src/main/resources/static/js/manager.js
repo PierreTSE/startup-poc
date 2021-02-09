@@ -1,28 +1,3 @@
-function addTimecheckList( projTimechecks, user) {
-    document.querySelectorAll("#projects .list-group").forEach(div => div.classList.remove("active"))
-    this.classList.add("active")
-    let usersGestion = $("#users-gestion")
-    usersGestion.children("li,p").remove()
-    usersGestion.prepend($("<ul>", {
-        id: "list-timechecks",
-        class: 'list-group',
-        //style:"display: none",
-        "data-id": this.getAttribute("data-id")
-    }))
-    let listUsersItem = $("#list-users-item")
-    user.timeChecks.forEach(timecheck => function() {
-        // if (projTimechecks.some((element) => element.id===timecheck.id)) {
-        if (true) {
-            listUsers.prepend($("<li>", {
-                id: "timecheck",
-                class: 'list-group-item',
-                "data-id": this.getAttribute("data-id")})
-            .text(timecheck.time)).show()
-        }
-    })
-}
-
-
 
 function updateNavList(element, domID) {
     let li = document.createElement('li')
@@ -48,14 +23,24 @@ function updateNavList(element, domID) {
         }))
         let listUsers = $("#list-users")
         element.users.forEach(user => {
-                listUsers.prepend($("<li>", {
-                    id: "user-list-item",
-                    class: 'list-group-item',
-                    "data-id": this.getAttribute("data-id")})
-                .text(user.fullName)).show()
-                listUsers.on('click', addTimecheckList(element.timechecks,user))
+                listUsers.append($("<li>", {
+                    id: "user-list-item"+user.id,
+                    class: 'list-group-item'
+                    })
+                .text(user.fullName).append($("<ul>", {
+                    id: "list-timechecks"+user.id,
+                    class: 'list-group',
+                }))).show()
+                let ListTimechecks=$("#list-timechecks"+user.id)
+                user.timeChecks.forEach(timecheck => {
+                    // if (projTimechecks.some((element) => element.id===timecheck.id)) {
+                    ListTimechecks.append($("<li>", {
+                        class: 'list-group-item'})
+                    .text(timecheck.time)).show()
+                })
             }
         )
+        
 
 
         $("#gestion").show()
@@ -75,19 +60,6 @@ async function fetchProjects() {
     }
 }
 
-async function fetchTimechecks() {
-    $("#projects").empty()
-    try {
-        const res = await fetch("/timechecks")
-        const res_1 = await res.json()
-        return res_1.forEach(user => {
-            updateNavList(user, 'user', "#users")
-        })
-    } catch (e) {
-        return console.log(e)
-    }
-}
-
 
 $(document).ready(() => {
     fetchProjects()
@@ -100,13 +72,16 @@ $(document).ready(() => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                firstname: $("#add-user-firstname").val(),
-                lastname: $("#add-user-lastname").val(),
+                user: {
+                    firstname: $("#add-user-firstname").val(),
+                    lastname: $("#add-user-lastname").val()
+                },
+                password: $("#add-user-password").val()
             })
         })
             .then(res => {
-                if (res.status == 201) {
-                        fetchUsers()
+                if(res.status===201) {
+                    fetchUsers()
                 }
             })
             .catch(e => console.log(e))
@@ -121,13 +96,12 @@ $(document).ready(() => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                firstname: $("#add-user-firstname").val(),
-                lastname: $("#add-user-lastname").val(),
+                name: $("#add-user-firstname").val(),
             })
         })
             .then(res => {
                 if (res.status == 201) {
-                        fetchUsers()
+                        fetchProjects()
                 }
             })
             .catch(e => console.log(e))
