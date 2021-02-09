@@ -11,10 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthenticableUserDetailsService implements UserDetailsService {
-    @Autowired
-    private AuthenticableUserRepository authenticableUserRepository;
-
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+
+    @Autowired private AuthenticableUserRepository authenticableUserRepository;
 
     @Override
     @Transactional(readOnly = true)

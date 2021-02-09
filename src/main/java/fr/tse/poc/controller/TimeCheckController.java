@@ -30,106 +30,22 @@ import java.util.*;
 @RestController
 public class TimeCheckController {
 
-    @Autowired
-    private TimeCheckRepository timeRepo;
-    @Autowired
-    private UserRepository userRepo;
-    @Autowired
-    private ProjectRepository projectRepo;
-    @Autowired
-    private ManagerRepository manRepo;
+    @Autowired private TimeCheckRepository timeRepo;
+    @Autowired private UserRepository userRepo;
+    @Autowired private ProjectRepository projectRepo;
+    @Autowired private ManagerRepository manRepo;
 
-    @GetMapping(path = "/TimeCheck")
-    public ResponseEntity<Collection<TimeCheck>> getAll(Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        
-        switch (userDetails.getRole()) {
-        case Admin:
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        case Manager:
-        	Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
-            Collection<TimeCheck> allTime = timeRepo.findAll();
-            allTime.removeIf(last -> !managed.contains(last.getUser()));
-            return new ResponseEntity<>(allTime, HttpStatus.OK);
-        case User:
-        	User user = userRepo.getOne(userDetails.getForeignId());
-        	Collection<TimeCheck> TimeUser = user.getTimeChecks();
-           
-            return new ResponseEntity<>(TimeUser, HttpStatus.OK);
-            
-        default:
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-
-    @GetMapping(path = "/TimeCheck/{id}")
-    public ResponseEntity<TimeCheck> getOne(Authentication authentication, @PathVariable Long id) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        switch (userDetails.getRole()) {
-        case Admin:
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        case Manager:
-        	 Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
-             TimeCheck wantedTime = timeRepo.getOne(id);
-             if (managed.contains(wantedTime.getUser())) {
-                 return new ResponseEntity<>(wantedTime, HttpStatus.OK);
-             } else {
-                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-             }
-        case User:
-        	wantedTime = timeRepo.getOne(id);
-            if (userRepo.getOne(userDetails.getForeignId()) == wantedTime.getUser()) {
-                return new ResponseEntity<>(wantedTime, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            }
-        default:
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-
-    @DeleteMapping(path = "/TimeCheck/{id}")
-    public ResponseEntity<TimeCheck> delTime(Authentication authentication, @PathVariable Long id) {
+    @PostMapping(path = "/timecheck")
+    public ResponseEntity<TimeCheck> addTime(@RequestBody Map<String, String> params, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-        switch (userDetails.getRole()) {
-            case Admin:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            case Manager:
-                Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
-                TimeCheck wantedTime = timeRepo.getOne(id);
-                if (managed.contains(wantedTime.getUser())) {
-                    timeRepo.deleteById(id);
-                    return new ResponseEntity<>(HttpStatus.OK);
-                } else {
-                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-                }
-            case User:
-                if (userRepo.getOne(userDetails.getForeignId()) == timeRepo.getOne(id).getUser()) {
-                    timeRepo.deleteById(id);
-                    return new ResponseEntity<>(HttpStatus.OK);
-                } else {
-                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-                }
-            default:
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        if (params.get("projectId") == null || params.get("time") == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-    }
 
-
-    @PostMapping(path = "/TimeCheck")
-    public ResponseEntity<TimeCheck> addTime(@RequestBody Map<String,String> params, Authentication authentication) {
-        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-
-        if (params.get("projectId") == null || params.get("time")==null) {
-        	 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        
         Long projectId = Long.valueOf(params.get("projectId"));
-        float time = Float.valueOf(params.get("time"));
-        
+        float time = Float.parseFloat(params.get("time"));
+
         if (userDetails.getRole().equals(Role.User)) {
 
             TimeCheck nuTime = new TimeCheck();
@@ -148,9 +64,142 @@ public class TimeCheckController {
         }
     }
 
+    @GetMapping(path = "/timecheck")
+    public ResponseEntity<Collection<TimeCheck>> getTimeChecks(Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
-    @PatchMapping(path = "/TimeCheck/{id}")
-    public ResponseEntity<TimeCheck> modTime(Authentication authentication, @PathVariable Long id, @RequestBody Map<String, String> params) {
+        switch (userDetails.getRole()) {
+            case Admin:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            case Manager:
+                Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+                Collection<TimeCheck> allTime = timeRepo.findAll();
+                allTime.removeIf(last -> !managed.contains(last.getUser()));
+                return new ResponseEntity<>(allTime, HttpStatus.OK);
+            case User:
+                User user = userRepo.getOne(userDetails.getForeignId());
+                Collection<TimeCheck> TimeUser = user.getTimeChecks();
+
+                return new ResponseEntity<>(TimeUser, HttpStatus.OK);
+
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping(path = "/timecheck/{id}")
+    public ResponseEntity<TimeCheck> getTimeCheck(Authentication authentication, @PathVariable Long id) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        switch (userDetails.getRole()) {
+            case Admin:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            case Manager:
+                Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+                TimeCheck wantedTime = timeRepo.getOne(id);
+                if (managed.contains(wantedTime.getUser())) {
+                    return new ResponseEntity<>(wantedTime, HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                }
+            case User:
+                wantedTime = timeRepo.getOne(id);
+                if (userRepo.getOne(userDetails.getForeignId()) == wantedTime.getUser()) {
+                    return new ResponseEntity<>(wantedTime, HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                }
+            default:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    /**
+     * Create and download a pdf file containing timestamps
+     * if called by a user it send all them timestamps
+     * if called by a manager, either :
+     * the body of the request contains a list of user the their timestamps are sent
+     * there is no body and timestamps form all managed users are sent
+     * <p>
+     * Optional values startDate & endDate to select within a time range
+     */
+    @GetMapping(path = "/timecheck/export")
+    public ResponseEntity<Resource> exportPDF(@RequestPart(value = "users") Optional<List<Long>> usersId, @RequestPart(value = "startDate") Optional<Float> startDate, @RequestPart(value = "endDate") Optional<Float> endDate, Authentication authentication) {
+        AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
+        PDFGenerator pDFGenerator = new PDFGenerator();
+
+        switch (userDetails.getRole()) {
+            case Admin:
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            case Manager:
+                HashSet<TimeCheck> time = new HashSet<TimeCheck>();
+                Set<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+                if (usersId.isPresent()) {
+                    for (Long id : usersId.get()) {
+                        User myUser = userRepo.getOne(id);
+                        if (managed.contains(myUser)) {
+                            Set<TimeCheck> userTime = new HashSet<>(myUser.getTimeChecks());
+                            // must be called before you can call i.remove()
+                            startDate.ifPresent(aFloat -> userTime.removeIf(timei -> timei.getTime() < aFloat));
+                            // must be called before you can call i.remove()
+                            endDate.ifPresent(aFloat -> userTime.removeIf(timei -> timei.getTime() < aFloat));
+                            time.addAll(userTime);
+                        }
+                    }
+                } else {
+                    for (User user : managed) {
+
+                        Set<TimeCheck> userTime = new HashSet<>(user.getTimeChecks());
+                        // must be called before you can call i.remove()
+                        startDate.ifPresent(aFloat -> userTime.removeIf(timei -> timei.getTime() < aFloat));
+                        // must be called before you can call i.remove()
+                        endDate.ifPresent(aFloat -> userTime.removeIf(timei -> timei.getTime() < aFloat));
+                        time.addAll(userTime);
+                    }
+                }
+
+                String filePath = pDFGenerator.generatePdfReport(time);
+
+                Path path = Paths.get(filePath);
+                Resource resource = null;
+                try {
+                    resource = new UrlResource(path.toUri());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType("application/pdf"))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+
+            case User:
+                Set<TimeCheck> timeUser = new HashSet<>(userRepo.getOne(userDetails.getForeignId()).getTimeChecks());
+                // must be called before you can call i.remove()
+                startDate.ifPresent(aFloat -> timeUser.removeIf(timei -> timei.getTime() < aFloat));
+                // must be called before you can call i.remove()
+                endDate.ifPresent(aFloat -> timeUser.removeIf(timei -> timei.getTime() < aFloat));
+                filePath = pDFGenerator.generatePdfReport(timeUser);
+
+                path = Paths.get(filePath);
+                resource = null;
+                try {
+                    resource = new UrlResource(path.toUri());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType("application/pdf"))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+
+            default:
+                new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        }
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+
+    @PatchMapping(path = "/timecheck/{id}")
+    public ResponseEntity<TimeCheck> updateTimeCheck(Authentication authentication, @PathVariable Long id, @RequestBody Map<String, String> params) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
 
         switch (userDetails.getRole()) {
@@ -206,138 +255,31 @@ public class TimeCheckController {
         }
     }
 
-    /**
-     * Create and download a pdf file containing timestamps
-     * if called by a user it send all them timestamps
-     * if called by a manager, either :
-     * the body of the request contains a list of user the their timestamps are sent
-     * there is no body and timestamps form all managed users are sent
-     * <p>
-     * Optional values startDate & endDate to select within a time range
-     *
-     * @param usersId
-     * @param authentication
-     *
-     * @return
-     */
-    @GetMapping(path = "/TimeCheck/export")
-    public ResponseEntity<Resource> ExportPdf(@RequestPart(value = "users") Optional<List<Long>> usersId, @RequestPart(value = "startDate") Optional<Float> startDate, @RequestPart(value = "endDate") Optional<Float> endDate, Authentication authentication) {
+    @DeleteMapping(path = "/timecheck/{id}")
+    public ResponseEntity<TimeCheck> deleteTimeCheck(Authentication authentication, @PathVariable Long id) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        PDFGenerator pDFGenerator = new PDFGenerator();
 
         switch (userDetails.getRole()) {
             case Admin:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             case Manager:
-                HashSet<TimeCheck> time = new HashSet<TimeCheck>();
-                Set<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
-                if (usersId.isPresent()) {
-                    for (Long id : usersId.get()) {
-                        User myUser = userRepo.getOne(id);
-                        if (managed.contains(myUser)) {
-                            Set<TimeCheck> userTime = new HashSet<>(myUser.getTimeChecks());
-                            if (startDate.isPresent()) {
-                                Iterator<TimeCheck> i = userTime.iterator();
-                                while (i.hasNext()) {
-                                    TimeCheck timei = i.next(); // must be called before you can call i.remove()
-                                    if (timei.getTime() < startDate.get()) {
-                                        i.remove();
-                                    }
-                                }
-                            }
-                            if (endDate.isPresent()) {
-                                Iterator<TimeCheck> i = userTime.iterator();
-                                while (i.hasNext()) {
-                                    TimeCheck timei = i.next(); // must be called before you can call i.remove()
-                                    if (timei.getTime() < endDate.get()) {
-                                        i.remove();
-                                    }
-                                }
-                            }
-                            time.addAll(userTime);
-                        }
-                    }
+                Collection<User> managed = manRepo.getOne(userDetails.getForeignId()).getUsers();
+                TimeCheck wantedTime = timeRepo.getOne(id);
+                if (managed.contains(wantedTime.getUser())) {
+                    timeRepo.deleteById(id);
+                    return new ResponseEntity<>(HttpStatus.OK);
                 } else {
-                    for (User user : managed) {
-
-                        Set<TimeCheck> userTime = new HashSet<>(user.getTimeChecks());
-                        if (startDate.isPresent()) {
-                            Iterator<TimeCheck> i = userTime.iterator();
-                            while (i.hasNext()) {
-                                TimeCheck timei = i.next(); // must be called before you can call i.remove()
-                                if (timei.getTime() < startDate.get()) {
-                                    i.remove();
-                                }
-                            }
-                        }
-                        if (endDate.isPresent()) {
-                            Iterator<TimeCheck> i = userTime.iterator();
-                            while (i.hasNext()) {
-                                TimeCheck timei = i.next(); // must be called before you can call i.remove()
-                                if (timei.getTime() < endDate.get()) {
-                                    i.remove();
-                                }
-                            }
-                        }
-                        time.addAll(userTime);
-                    }
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
-
-                String filePath = pDFGenerator.generatePdfReport(time);
-
-                Path path = Paths.get(filePath);
-                Resource resource = null;
-                try {
-                    resource = new UrlResource(path.toUri());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType("application/pdf"))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-
             case User:
-                Set<TimeCheck> timeUser = new HashSet<>(userRepo.getOne(userDetails.getForeignId()).getTimeChecks());
-                if (startDate.isPresent()) {
-                    Iterator<TimeCheck> i = timeUser.iterator();
-                    while (i.hasNext()) {
-                        TimeCheck timei = i.next(); // must be called before you can call i.remove()
-                        if (timei.getTime() < startDate.get()) {
-                            i.remove();
-                        }
-                    }
+                if (userRepo.getOne(userDetails.getForeignId()) == timeRepo.getOne(id).getUser()) {
+                    timeRepo.deleteById(id);
+                    return new ResponseEntity<>(HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
-                if (endDate.isPresent()) {
-                    Iterator<TimeCheck> i = timeUser.iterator();
-                    while (i.hasNext()) {
-                        TimeCheck timei = i.next(); // must be called before you can call i.remove()
-                        if (timei.getTime() < endDate.get()) {
-                            i.remove();
-                        }
-                    }
-                }
-                filePath = pDFGenerator.generatePdfReport(timeUser);
-
-                path = Paths.get(filePath);
-                resource = null;
-                try {
-                    resource = new UrlResource(path.toUri());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType("application/pdf"))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-
-
             default:
-                new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
-
-
 }

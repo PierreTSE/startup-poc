@@ -29,8 +29,8 @@ public class User extends People {
     @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
     @JsonIgnore
     private Set<Project> projects = new HashSet<>();
-    
-    
+
+
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private Set<TimeCheck> timeChecks = new HashSet<>();
 

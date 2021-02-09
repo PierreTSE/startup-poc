@@ -18,13 +18,13 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.List;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles(profiles = "test")
@@ -126,9 +126,9 @@ public class ProjectControllerTest {
         Project projectEmpty = new Project("project to delete");
         projectEmpty.setManager(manager1);
         projectRepository.save(projectEmpty);
-        
 
-        mvc.perform(delete("/projects/"+ projectEmpty.getId())
+
+        mvc.perform(delete("/projects/" + projectEmpty.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -154,7 +154,7 @@ public class ProjectControllerTest {
     @Test
     public void testAddProjectUser() throws Exception {
         mvc.perform(post("/projects")
-        		.content("New project")
+                .content("New project")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -168,10 +168,10 @@ public class ProjectControllerTest {
                 .andExpect(status().isOk());
 
         List<Project> listProj = projectRepository.findAll();
-        
-        assertEquals("New project", listProj.get(listProj.size()-1).getName());
 
-        projectRepository.deleteById(listProj.get(listProj.size()-1).getId());
+        assertEquals("New project", listProj.get(listProj.size() - 1).getName());
+
+        projectRepository.deleteById(listProj.get(listProj.size() - 1).getId());
 
     }
 
@@ -179,7 +179,7 @@ public class ProjectControllerTest {
     @Test
     public void testAddProjectAdmin() throws Exception {
         mvc.perform(post("/projects")
-        		.content("New project")
+                .content("New project")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -188,7 +188,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectBaseUser() throws Exception {
         mvc.perform(patch("/projects/1")
-        		.content("{ \"name\" : \"new Name\" }")
+                .content("{ \"name\" : \"new Name\" }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -204,7 +204,7 @@ public class ProjectControllerTest {
         projectRepository.findById(1L).get().setName("project empty");
 
         mvc.perform(patch("/projects/3")
-        		.content("{ \"name\" : \"new Name\" }")
+                .content("{ \"name\" : \"new Name\" }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
@@ -215,7 +215,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectBaseAdmin() throws Exception {
         mvc.perform(patch("/projects/1")
-        		.content("{ \"name\" : \"new Name\" }")
+                .content("{ \"name\" : \"new Name\" }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -225,7 +225,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectUsersUser() throws Exception {
         mvc.perform(patch("/projects/1/users/true")
-        		.content("[2]")
+                .content("[2]")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -237,10 +237,10 @@ public class ProjectControllerTest {
                 .content("[2] ")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        
+
 
         mvc.perform(patch("/projects/3/users/true")
-        		.content("[2] ")
+                .content("[2] ")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
@@ -251,7 +251,7 @@ public class ProjectControllerTest {
     @Test
     public void testModProjectUsersAdmin() throws Exception {
         mvc.perform(patch("/projects/1/users/true")
-        		 .content("[2] ")
+                .content("[2] ")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
