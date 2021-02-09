@@ -164,16 +164,22 @@ public class ProjectControllerTest {
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testAddProjectManager() throws Exception {
-        mvc.perform(post("/projects")
-        		.content("New project")
+        String name = "new-project";
+    	mvc.perform(post("/projects")
+        		.content(name)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(11)));
-
-        Assertions.assertTrue(projectRepository.findById(11L).isPresent());
-        assertEquals("New project", projectRepository.findById(11L).get().getName());
-
-        projectRepository.deleteById(11L);
+                .andExpect(status().isOk());
+        List<Project> projList = projectRepository.findAll();
+        Long idproj = -1L;
+        
+        for ( Project proj : projList) {
+        	if (proj.getName().equals( name)) {
+        		idproj = proj.getId();
+        	}
+        }
+        
+        Assertions.assertFalse(idproj == -1L);
+        projectRepository.deleteById(idproj);
 
     }
 
@@ -243,7 +249,9 @@ public class ProjectControllerTest {
                 .andExpect(status().isOk());
          
         assertEquals(projectRepository.findById(1L).get().getUsers().size(), 1);
-
+        Project myProj = projectRepository.findById(1L).get() ;
+        myProj.getUsers().clear();
+        projectRepository.save(myProj);
         mvc.perform(patch("/projects/3/users/true")
         		.content("[2]")
                 .contentType(MediaType.APPLICATION_JSON))

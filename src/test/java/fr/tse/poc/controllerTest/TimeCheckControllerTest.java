@@ -152,19 +152,23 @@ class TimeCheckControllerTest {
 
     @WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
-    public void testAddTimeUser() throws Exception {
-        
-    
-    	
+    public void testAddTimeUser() throws Exception {	
     	mvc.perform(post("/TimeCheck")
         		.content("{ \"projectId\" : \"2\", \"time\":\"15\" }")
         		.contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    	 List<TimeCheck> timeList = timeCheckRepository.findAll();
+         Long idTime = -1L;
+         
+         for ( TimeCheck time : timeList) {
+         	if (time.getTime() == 15) {
+         		idTime = time.getId();
+         	}
+         }
+         
+       assertTrue(idTime != -1L);
 
-        assertEquals(timeCheckRepository.findById(10L).get().getUser().getLastname(), "user1-lastname");
-        assertEquals(timeCheckRepository.findById(10L).get().getTime(), 15);
-
-        timeCheckRepository.deleteById(10L);
+        timeCheckRepository.deleteById(idTime);
     }
 
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
