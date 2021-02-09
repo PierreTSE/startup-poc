@@ -230,8 +230,10 @@ public class ProjectControllerTest {
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testModProjectUsersManager() throws Exception {
+    	
+    	
         mvc.perform(patch("/projects/1/users")
-                .content("users, {[2]} \n add, True ")
+                .content("{ \"users\" :  {[\"2\"]} , \"add\" :  \"True\"  }")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].name", is("New Name")));

@@ -125,11 +125,11 @@ class TimeCheckControllerTest {
         project2.addTimeCheck(timeChecks.get(0));
         timeCheckRepository.saveAll(timeChecks);
 
-        mvc.perform(delete("/TimeCheck/10")
+        mvc.perform(delete("/TimeCheck/"+timeChecks.get(0).getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertTrue(timeCheckRepository.findById(10L).isEmpty());
+        assertTrue(timeCheckRepository.findById(timeChecks.get(0).getId()).isEmpty());
 
 
     }
@@ -157,11 +157,12 @@ class TimeCheckControllerTest {
     
     	
     	mvc.perform(post("/TimeCheck")
-        		 .queryParam("projectId", "4")
-        		 .queryParam("time", "15"))
+        		.content("{ \"projectId\" : \"2\", \"time\":\"15\" }")
+        		.contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertEquals(timeCheckRepository.findById(10L).get().getUser().getLastname(), "user1");
+        assertEquals(timeCheckRepository.findById(10L).get().getUser().getLastname(), "user1-lastname");
+        assertEquals(timeCheckRepository.findById(10L).get().getTime(), 15);
 
         timeCheckRepository.deleteById(10L);
     }
@@ -170,7 +171,8 @@ class TimeCheckControllerTest {
     @Test
     public void testAddTimeManager() throws Exception {
         mvc.perform(post("/TimeCheck")
-                .content(" projectId,{4} \n time, {15} "))
+        		.content("{ \"projectId\" : \"2\", \"time\":\"15\" }")
+        		.contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -178,7 +180,8 @@ class TimeCheckControllerTest {
     @Test
     public void testAddTimeAdmin() throws Exception {
         mvc.perform(post("/TimeCheck")
-                .content(" projectId,{4} \n time, {15} "))
+        		.content("{ \"projectId\" : \"2\", \"time\":\"15\" }")
+        		.contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
