@@ -24,7 +24,6 @@ import java.util.Set;
 public class User extends People {
     @NotNull
     @ManyToOne
-    @JsonIgnore
     private Manager manager;
 
     @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
