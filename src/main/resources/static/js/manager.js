@@ -1,4 +1,5 @@
-function updateNavList(element, role, domID) {
+function updateNavList(element, domID) {
+
     let li = document.createElement('li')
     li.classList.add("nav-item")
     let div = document.createElement('div')
@@ -20,24 +21,40 @@ function updateNavList(element, role, domID) {
             class: 'mb-3',
             "data-role": this.getAttribute("data-role"),
             "data-id": this.getAttribute("data-id")
-        }).text(this.innerText)).show()
-            $("#fullname").after($('<p>', {
-                class: 'mb-3 ml-5',
-            }).text("Managé par : " + this.getAttribute("data-manager-fullname")))
-            // $("#btn-reaffect").show()
-            // $("#btn-promote-admin").show()
-            // $("#btn-promote-manager").show()
-        $("#users-gestion").show()
+        }))
+        let listUsers = $("#list-users")
+        element.users.forEach(user => {
+                listUsers.append($("<li>", {
+                    id: "user-list-item"+user.id,
+                    class: 'list-group-item'
+                    })
+                .text(user.fullName).append($("<ul>", {
+                    id: "list-timechecks"+user.id,
+                    class: 'list-group',
+                }))).show()
+                let ListTimechecks=$("#list-timechecks"+user.id)
+                user.timeChecks.forEach(timecheck => {
+                    // if (projTimechecks.some((element) => element.id===timecheck.id)) {
+                    ListTimechecks.append($("<li>", {
+                        class: 'list-group-item'})
+                    .text(timecheck.time)).show()
+                })
+            }
+        )
+        
+
+
+        $("#gestion").show()
     })
 }
 
-async function fetchUsers() {
-    $("#users").empty()
+async function fetchProjects() {
+    $("#projects").empty()
     try {
-        const res = await fetch("/users")
+        const res = await fetch("/projects")
         const res_1 = await res.json()
-        return res_1.forEach(user => {
-            updateNavList(user, 'user', "#users")
+        return res_1.forEach(project => {
+            updateNavList(project , "#projects")
         })
     } catch (e) {
         return console.log(e)
@@ -56,13 +73,36 @@ $(document).ready(() => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                firstname: $("#add-user-firstname").val(),
-                lastname: $("#add-user-lastname").val(),
+                user: {
+                    firstname: $("#add-user-firstname").val(),
+                    lastname: $("#add-user-lastname").val()
+                },
+                password: $("#add-user-password").val()
+            })
+        })
+            .then(res => {
+                if(res.status===201) {
+                    fetchUsers()
+                }
+            })
+            .catch(e => console.log(e))
+    })
+
+    $("#form-add-project").submit(e => {
+        e.preventDefault();
+        fetch("/users", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: $("#add-user-firstname").val(),
             })
         })
             .then(res => {
                 if (res.status == 201) {
-                        fetchUsers()
+                        fetchProjects()
                 }
             })
             .catch(e => console.log(e))

@@ -1,6 +1,7 @@
 package fr.tse.poc.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -19,19 +20,18 @@ import java.util.Set;
 @Table(indexes = {
         @Index(name = "user_manager_index", columnList = "manager_id")
 })
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User extends People {
     @NotNull
     @ManyToOne
-    @JsonIgnore
     private Manager manager;
 
     @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
     @JsonIgnore
     private Set<Project> projects = new HashSet<>();
-    
-    
+
+
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-    @JsonIgnore
     private Set<TimeCheck> timeChecks = new HashSet<>();
 
     public User(String firstname, String lastname) {

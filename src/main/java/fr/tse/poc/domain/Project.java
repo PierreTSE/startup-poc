@@ -38,11 +38,9 @@ public class Project {
     private Manager manager;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JsonIgnore
     private Set<User> users = new HashSet<>();
 
     @OneToMany(mappedBy = "project", fetch = FetchType.EAGER)
-    @JsonIgnore
     private Set<TimeCheck> timeChecks = new HashSet<>();
 
     public Project(String name) {

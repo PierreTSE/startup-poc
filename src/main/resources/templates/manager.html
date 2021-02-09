@@ -5,47 +5,47 @@
 </head>
 
 <body>
-    <div class="container-fluid d-flex h-100 flex-column">
-        <div th:replace="fragments.html :: header"></div>
-    
-        <div class="row flex-fill d-flex justify-content-start">
-            <div class="col-md-2 bg-light" id="people">
-                <span class="navbar-brand font-weight-bold">Collaborateurs</span>
-                <div class="pl-3">
-                    <u>Users</u>
-                    <ul class="nav flex-column" id="users"></ul>
-                </div>
+<div class="container-fluid d-flex h-100 flex-column">
+    <div th:replace="fragments.html :: header"></div>
+
+    <div class="row flex-fill d-flex justify-content-start">
+        <div class="col-md-2 bg-light" id="people">
+            <span class="navbar-brand font-weight-bold">Collaborateurs</span>
+            <div class="pl-3">
+                <u>Users</u>
+                <ul class="nav flex-column" id="users"></ul>
             </div>
-    
-            <div class="col-md-10">
-                <!-- content-->
-                <h2>Créer un Utilisateur</h2>
-                <form class="form-inline jumbotron" id="form-add-user">
-                    <label class="sr-only" for="add-user-firstname"></label>
-                    <input class="form-control mb-2 mr-sm-2" id="add-user-firstname" placeholder="Rémy" required
-                           type="text">
-                    <label class="sr-only" for="add-user-lastname"></label>
-                    <input class="form-control mb-2 mr-sm-2" id="add-user-lastname" placeholder="Girodon" required
-                           type="text">
-                </form>
-                <h2>Créer un Projet</h2>
-                <form class="form-inline jumbotron" id="form-add-user">
-                    <label class="sr-only" for="add-project-name"></label>
-                    <input class="form-control mb-2 mr-sm-2" id="add-project-name" placeholder="Rémy" required
-                           type="text">
-                </form>
-    
-                <div id="gestion" style="display: none">
-                    <h2>Gestion des collaborateurs</h2>
-                    <div class="jumbotron" id="users-gestion">
-                        <div class="row d-flex justify-content-around">
-                            
-                        </div>
+        </div>
+
+        <div class="col-md-10">
+            <!-- content-->
+            <h2>Créer un Utilisateur</h2>
+            <form class="form-inline jumbotron" id="form-add-user">
+                <label class="sr-only" for="add-user-firstname"></label>
+                <input class="form-control mb-2 mr-sm-2" id="add-user-firstname" placeholder="Rémy" required
+                       type="text">
+                <label class="sr-only" for="add-user-lastname"></label>
+                <input class="form-control mb-2 mr-sm-2" id="add-user-lastname" placeholder="Girodon" required
+                       type="text">
+            </form>
+            <h2>Créer un Projet</h2>
+            <form class="form-inline jumbotron" id="form-add-user">
+                <label class="sr-only" for="add-project-name"></label>
+                <input class="form-control mb-2 mr-sm-2" id="add-project-name" placeholder="Rémy" required
+                       type="text">
+            </form>
+
+            <div id="gestion" style="display: none">
+                <h2>Gestion des collaborateurs</h2>
+                <div class="jumbotron" id="users-gestion">
+                    <div class="row d-flex justify-content-around">
+
                     </div>
                 </div>
+            </div>
         </div>
     </div>
     <script th:src="@{js/manager.js}"></script>
-    
+
 </body>
 </html>

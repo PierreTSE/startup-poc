@@ -22,24 +22,30 @@
         <div class="col-md-10">
             <!-- content-->
             <h2>Créer un Manager</h2>
-            <form class="form-inline jumbotron" id="form-add-manager">
+            <form autocomplete="off" class="form-inline jumbotron" id="form-add-manager">
                 <label class="sr-only" for="add-manager-firstname"></label>
                 <input class="form-control mb-2 mr-sm-2" id="add-manager-firstname" placeholder="Jacques" required
                        type="text">
                 <label class="sr-only" for="add-manager-lastname"></label>
                 <input class="form-control mb-2 mr-sm-2" id="add-manager-lastname" placeholder="Fayolle" required
                        type="text">
+                <label class="sr-only" for="add-manager-password"></label>
+                <input class="form-control mb-2 mr-sm-2" id="add-manager-password" placeholder="Mot de passe" required
+                       type="password">
                 <button class="btn btn-primary mb-2" type="submit">Créer</button>
             </form>
 
             <h2>Créer un Utilisateur</h2>
-            <form class="form-inline jumbotron" id="form-add-user">
+            <form autocomplete="off" class="form-inline jumbotron" id="form-add-user">
                 <label class="sr-only" for="add-user-firstname"></label>
-                <input class="form-control mb-2 mr-sm-2" id="add-user-firstname" placeholder="Rémy" required
+                <input class="form-control mb-2 mr-sm-2" id="add-user-firstname" placeholder="Prénom" required
                        type="text">
                 <label class="sr-only" for="add-user-lastname"></label>
-                <input class="form-control mb-2 mr-sm-2" id="add-user-lastname" placeholder="Girodon" required
+                <input class="form-control mb-2 mr-sm-2" id="add-user-lastname" placeholder="Nom" required
                        type="text">
+                <label class="sr-only" for="add-user-password"></label>
+                <input class="form-control mb-2 mr-sm-2" id="add-user-password" placeholder="Mot de passe" required
+                       type="password">
                 <label class="sr-only" for="add-user-manager-id"></label>
                 <input class="form-control mb-2 mr-sm-2" id="add-user-manager-id" min="0" placeholder="1" required
                        step="1" type="number">
@@ -53,7 +59,7 @@
                         <button class="btn btn-primary" data-target="#reaffect-modal" data-toggle="modal"
                                 id="btn-reaffect">Changer l'affectation
                         </button>
-                        <button class="btn btn-primary" id="btn-promote-admin" onclick="promoteToAdmin()">Promouvoir en
+                        <button class="btn btn-primary" id="btn-promote-admin">Promouvoir en
                             Administrateur
                         </button>
                         <button class="btn btn-primary" id="btn-promote-manager" onclick="promoteToManager()">Promouvoir
