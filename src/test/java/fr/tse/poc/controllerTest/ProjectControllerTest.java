@@ -7,6 +7,8 @@ import fr.tse.poc.dao.ProjectRepository;
 import fr.tse.poc.dao.UserRepository;
 import fr.tse.poc.domain.Manager;
 import fr.tse.poc.domain.Project;
+import fr.tse.poc.domain.User;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles(profiles = "test")
@@ -152,7 +156,7 @@ public class ProjectControllerTest {
     @Test
     public void testAddProjectUser() throws Exception {
         mvc.perform(post("/projects")
-        		.content("name , New project")
+        		.content("{\"name\" : \"New project\"}")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -160,15 +164,22 @@ public class ProjectControllerTest {
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testAddProjectManager() throws Exception {
-        mvc.perform(post("/projects")
-                .content("name : New project")
-                .contentType(MediaType.MULTIPART_FORM_DATA))
+        String name = "new-project";
+    	mvc.perform(post("/projects")
+        		.content(name)
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-
-        Assertions.assertTrue(projectRepository.findById(4L).isPresent());
-        assertEquals("New project", projectRepository.findById(4L).get().getName());
-
-        projectRepository.deleteById(4L);
+        List<Project> projList = projectRepository.findAll();
+        Long idproj = -1L;
+        
+        for ( Project proj : projList) {
+        	if (proj.getName().equals( name)) {
+        		idproj = proj.getId();
+        	}
+        }
+        
+        Assertions.assertFalse(idproj == -1L);
+        projectRepository.deleteById(idproj);
 
     }
 
@@ -176,7 +187,7 @@ public class ProjectControllerTest {
     @Test
     public void testAddProjectAdmin() throws Exception {
         mvc.perform(post("/projects")
-        		.content("name , New project")
+        		.content("{\"name\" : \"New project\"}")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -221,8 +232,8 @@ public class ProjectControllerTest {
     @WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testModProjectUsersUser() throws Exception {
-        mvc.perform(patch("/projects/1/users")
-        		.content("users, {[2]} \n add, True ")
+        mvc.perform(patch("/projects/1/users/true")
+        		.content("[2]")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
@@ -230,14 +241,19 @@ public class ProjectControllerTest {
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testModProjectUsersManager() throws Exception {
-        mvc.perform(patch("/projects/1/users")
-                .content("users, {[2]} \n add, True ")
+    	
+    	
+        mvc.perform(patch("/projects/1/users/true")
+                .content("[1]")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[0].name", is("New Name")));
-        projectRepository.findById(1L).get().setName("project empty");
-
-        mvc.perform(patch("/projects/3/users")
+                .andExpect(status().isOk());
+         
+        assertEquals(projectRepository.findById(1L).get().getUsers().size(), 1);
+        Project myProj = projectRepository.findById(1L).get() ;
+        myProj.getUsers().clear();
+        projectRepository.save(myProj);
+        mvc.perform(patch("/projects/3/users/true")
+        		.content("[2]")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
@@ -247,8 +263,8 @@ public class ProjectControllerTest {
     @WithUserDetails(value = "admin", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testModProjectUsersAdmin() throws Exception {
-        mvc.perform(patch("/projects/1/users")
-        		 .content("users, {[2]} \n add, True ")
+        mvc.perform(patch("/projects/1/users/true")
+        		.content("[2]")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
