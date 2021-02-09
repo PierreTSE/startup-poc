@@ -125,11 +125,11 @@ class TimeCheckControllerTest {
         project2.addTimeCheck(timeChecks.get(0));
         timeCheckRepository.saveAll(timeChecks);
 
-        mvc.perform(delete("/TimeCheck/"+timeChecks.get(0).getId())
+        mvc.perform(delete("/TimeCheck/10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertTrue(timeCheckRepository.findById(timeChecks.get(0).getId()).isEmpty());
+        assertTrue(timeCheckRepository.findById(10L).isEmpty());
 
 
     }
@@ -152,31 +152,25 @@ class TimeCheckControllerTest {
 
     @WithUserDetails(value = "user1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
-    public void testAddTimeUser() throws Exception {	
+    public void testAddTimeUser() throws Exception {
+        
+    
+    	
     	mvc.perform(post("/TimeCheck")
-        		.content("{ \"projectId\" : \"2\", \"time\":\"15\" }")
-        		.contentType(MediaType.APPLICATION_JSON))
+        		 .queryParam("projectId", "4")
+        		 .queryParam("time", "15"))
                 .andExpect(status().isOk());
-    	 List<TimeCheck> timeList = timeCheckRepository.findAll();
-         Long idTime = -1L;
-         
-         for ( TimeCheck time : timeList) {
-         	if (time.getTime() == 15) {
-         		idTime = time.getId();
-         	}
-         }
-         
-       assertTrue(idTime != -1L);
 
-        timeCheckRepository.deleteById(idTime);
+        assertEquals(timeCheckRepository.findById(10L).get().getUser().getLastname(), "user1");
+
+        timeCheckRepository.deleteById(10L);
     }
 
     @WithUserDetails(value = "manager1", userDetailsServiceBeanName = "authenticableUserDetailsService")
     @Test
     public void testAddTimeManager() throws Exception {
         mvc.perform(post("/TimeCheck")
-        		.content("{ \"projectId\" : \"2\", \"time\":\"15\" }")
-        		.contentType(MediaType.APPLICATION_JSON))
+                .content(" projectId,{4} \n time, {15} "))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -184,8 +178,7 @@ class TimeCheckControllerTest {
     @Test
     public void testAddTimeAdmin() throws Exception {
         mvc.perform(post("/TimeCheck")
-        		.content("{ \"projectId\" : \"2\", \"time\":\"15\" }")
-        		.contentType(MediaType.APPLICATION_JSON))
+                .content(" projectId,{4} \n time, {15} "))
                 .andExpect(status().isUnauthorized());
     }
 

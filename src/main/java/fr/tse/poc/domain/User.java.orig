@@ -1,7 +1,10 @@
 package fr.tse.poc.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+<<<<<<< HEAD
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+=======
+>>>>>>> remotes/origin/develop
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,25 +17,36 @@ import java.util.Set;
 
 @Data
 @NoArgsConstructor
+<<<<<<< HEAD
+@EqualsAndHashCode(callSuper = true)
+=======
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
+>>>>>>> remotes/origin/develop
 @Entity
 @Table(indexes = {
         @Index(name = "user_manager_index", columnList = "manager_id")
 })
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class User extends People {
     @NotNull
     @ManyToOne
     @JsonIgnore
     private Manager manager;
 
+<<<<<<< HEAD
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToOne
+    @JsonIgnore
+    private Project project;
+=======
     @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
     @JsonIgnore
     private Set<Project> projects = new HashSet<>();
-    
-    
+>>>>>>> remotes/origin/develop
+
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    @JsonIgnore
     private Set<TimeCheck> timeChecks = new HashSet<>();
 
     public User(String firstname, String lastname) {

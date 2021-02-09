@@ -32,8 +32,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### Custom ###
-src/main/resources/PdfReportRepo/*.pdf
-*.java.orig
-*.log

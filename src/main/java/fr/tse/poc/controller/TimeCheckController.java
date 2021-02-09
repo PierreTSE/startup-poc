@@ -120,15 +120,9 @@ public class TimeCheckController {
 
 
     @PostMapping(path = "/TimeCheck")
-    public ResponseEntity<TimeCheck> addTime(@RequestBody Map<String,String> params,  Authentication authentication) {
+    public ResponseEntity<TimeCheck> addTime(@RequestPart("projectId") long projectId, @RequestPart("time") float time, Authentication authentication) {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
-        
-        if (params.get("projectId")==null || params.get("time")==null) {
-        	 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        Long projectId = Long.valueOf(params.get("projectId"));
-        float time = Float.valueOf( params.get("time"));
-        
+
         if (userDetails.getRole().equals(Role.User)) {
 
             TimeCheck nuTime = new TimeCheck();

@@ -14,8 +14,11 @@ import java.util.Set;
 
 @Data
 @NoArgsConstructor
+<<<<<<< HEAD
+=======
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
+>>>>>>> remotes/origin/develop
 @Entity
 @Table(indexes = {
         @Index(name = "project_manager_index", columnList = "manager_id")
@@ -31,18 +34,25 @@ public class Project {
     private String name;
 
     @NotNull
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @ManyToOne
-    @JsonIgnore
+    @JsonIgnoreProperties("project")
     private Manager manager;
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @JsonIgnore
     private Set<User> users = new HashSet<>();
 
     @OneToMany(mappedBy = "project", fetch = FetchType.EAGER)
+    @JsonIgnore
     private Set<TimeCheck> timeChecks = new HashSet<>();
 
+<<<<<<< HEAD
+    public Project(String name, Manager manager) {
+        this.name = name;
+        this.manager = manager;
+    }
+    
+=======
     public Project(String name) {
         this.name = name;
     }
@@ -68,4 +78,5 @@ public class Project {
         timeChecks.remove(timeCheck);
         timeCheck.setProject(null);
     }
+>>>>>>> remotes/origin/develop
 }
