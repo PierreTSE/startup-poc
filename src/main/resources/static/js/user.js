@@ -10,6 +10,7 @@ function updateNavList(element, role, domID) {
 
     li.appendChild(div)
     document.querySelector(domID).append(li)
+    /*
     div.addEventListener('click', function () {
         document.querySelectorAll("#people .nav-link").forEach(div => div.classList.remove("active"))
         this.classList.add("active")
@@ -28,7 +29,7 @@ function updateNavList(element, role, domID) {
             // $("#btn-promote-admin").show()
             // $("#btn-promote-manager").show()
         $("#users-gestion").show()
-    })
+    })*/
 }
 
 
@@ -59,6 +60,22 @@ function fetchTimes() {
 $(document).ready(() => {
     fetchTimes()
     $("#form-add-Time").submit(e => {
+        
+        
+        //get project from name :
+        var idproj;
+        fetch("/projects")
+        	.then(res => res.json())
+        	.then(res => res.forEach(proj => {
+        		console.log(proj);
+            	if (proj.name == $("#add-Project-name").val()){
+            		idproj = proj.id;
+            		console.log(idproj)
+            	}
+        }))
+        .catch(e => console.log(e))
+        	
+        
         e.preventDefault();
         fetch("/timecheck", {
             method: 'POST',
@@ -67,7 +84,7 @@ $(document).ready(() => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                projectId: $("#add-Project-name").val(),
+                projectId: idproj,
                 time: $("#add-Time").val(),
             })
         })
