@@ -37,14 +37,15 @@
             <h2>Créer un Projet</h2>
             <form class="form-inline jumbotron" id="form-add-project">
                 <label class="sr-only" for="add-project-name"></label>
-                <input class="form-control mb-2 mr-sm-2" id="add-project-name" placeholder="Rémy" required
+                <input class="form-control mb-2 mr-sm-2" id="add-project-name" placeholder="Nom de Projet" required
                        type="text">
                 <button class="btn btn-primary mb-2" type="submit">Créer</button>
             </form>
 
             <div id="gestion" style="display: none">
                 <h2>Affichage des timechecks</h2>
-                <button class="btn btn-primary" id="btn-export-pdf" onclick="export_to_pdf()">exporter en pdf</button>
+                <button class="btn btn-primary my-3" id="btn-export-pdf" onclick="export_to_pdf()">Exporter en pdf
+                </button>
                 <div class="jumbotron" id="users-gestion">
                 </div>
             </div>

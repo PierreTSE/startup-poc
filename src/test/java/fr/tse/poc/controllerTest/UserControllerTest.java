@@ -95,7 +95,7 @@ public class UserControllerTest {
         User user = new User("John", "postUserTest");
         int size = this.userRepository.findAll().size();
         mvc.perform(post("/users")
-                .content(Utils.asJsonString(Map.of("user", user, "password", "a", "projectID","1")))
+                .content(Utils.asJsonString(Map.of("user", user, "password", "a", "projectID", "1")))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());

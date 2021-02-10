@@ -46,7 +46,7 @@ public class UserController {
                 // Put authentified manager as this user's manager
                 manager = managerRepository.findById(userDetails.getForeignId()).orElseThrow();
                 user.setManager(manager);
-                if(body.containsKey("projectID")) {
+                if (body.containsKey("projectID")) {
                     try {
                         user.getProjects().add(projectRepository.findById(Long.valueOf((String) body.get("projectID"))).orElseThrow());
                     } catch (NoSuchElementException e) {
@@ -146,7 +146,7 @@ public class UserController {
         String password = authenticableUserRepository.findByUsername(user.getFirstname()).getPassword();
 
         if (params.containsKey("status") && userDetails.getRole().equals(Role.Admin)) {
-            switch (params.get("status") ) {
+            switch (params.get("status")) {
                 case "Admin":
                     userRepository.deleteById(user.getId());
                     Admin newAdmin = adminRepository.save(new Admin(user.getFirstname(), user.getLastname()));
@@ -175,7 +175,7 @@ public class UserController {
             return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
         } else if (params.containsKey("project") && userDetails.getRole().equals(Role.Manager)) {
             // add project to user
-            Project proj=null;
+            Project proj = null;
             try {
                 proj = projectRepository.findById(parseLong(params.get("project"))).orElseThrow();
             } catch (NoSuchElementException e) {
@@ -185,7 +185,7 @@ public class UserController {
             proj.addUser(user);
             projectRepository.save(proj);
             return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
-        }else {
+        } else {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }

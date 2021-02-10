@@ -22,20 +22,6 @@ function affectProject(){
         .catch(e => console.log(e))
 }
 
-function export_to_pdf(){
-	fetch("/timecheck/export", {
-            method: 'get'})
-			.then(res => res.blob())
-			.then(blob => window.open(
-				URL.createObjectURL(
-					new Blob([blob],{
-						type:'application/pdf'
-					})
-			), "_self"))
-      // handle request error
-      .catch((err) => {console.log(err); throw err});
-	}
-
 function updateNavList(element, domID) {
     let li = document.createElement('li')
     li.classList.add("nav-item")
@@ -151,7 +137,7 @@ $(document).ready(() => {
             })
         })
             .then(res => {
-                if (res.status == 201) {
+                if (res.status === 201) {
                     fetchUsers()
                 }
             })
@@ -171,8 +157,8 @@ $(document).ready(() => {
             
         })
         .then(res => {
-            if (res.status == 200) {
-                    fetchProjects()
+            if (res.status === 200) {
+                fetchProjects()
             }
         })
         .catch(e => console.log(e))
@@ -197,6 +183,4 @@ $(document).ready(() => {
             }))
             .catch(e => console.log(e))
     })
-
-
 })
