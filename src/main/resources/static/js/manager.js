@@ -22,6 +22,20 @@ function affectProject(){
         .catch(e => console.log(e))
 }
 
+function export_to_pdf(){
+	fetch("/timecheck/export", {
+            method: 'get'})
+			.then(res => res.blob())
+			.then(blob => window.open(
+				URL.createObjectURL(
+					new Blob([blob],{
+						type:'application/pdf'
+					})
+			), "_self"))
+      // handle request error
+      .catch((err) => {console.log(err); throw err});
+	}
+
 function updateNavList(element, domID) {
     let li = document.createElement('li')
     li.classList.add("nav-item")
