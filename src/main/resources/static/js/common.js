@@ -9,5 +9,5 @@ function export_to_pdf(){
                 })
             ), "_blank"))
         // handle request error
-        .catch((err) => {console.log(err); throw err});
+        .catch(e => {console.error(e); throw err});
 }

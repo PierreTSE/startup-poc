@@ -55,11 +55,13 @@
                 <div class="jumbotron" id="buttons">
                     <div class="row d-flex justify-content-around">
                         <button class="btn btn-primary" data-target="#reaffect-modal" data-toggle="modal"
-                                id="btn-reaffect">Changer l'affectation
+                                id="btn-reaffect">Affecter à un projet
                         </button>
                     </div>
                 </div>
             </div>
+
+            <div th:replace="fragments.html :: footer"/>
         </div>
     </div>
     <script th:src="@{js/manager.js}"></script>

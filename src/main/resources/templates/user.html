@@ -9,21 +9,19 @@
 
     <div class="row flex-fill d-flex justify-content-start">
         <div class="col-md-2 bg-light" id="people">
-            <span class="navbar-brand font-weight-bold">Temps Entrés</span>
+            <span class="navbar-brand font-weight-bold">Projets</span>
             <div class="pl-3">
-                <u>Temps</u>
-                <ul class="nav flex-column" id="temps"></ul>
+                <ul class="nav flex-column" id="projects"></ul>
             </div>
         </div>
 
 
         <div class="col-md-10">
             <!-- content-->
-            <h2>Créer un Temps</h2>
+            <h2>Ajouter une estampille</h2>
             <form class="form-inline jumbotron" id="form-add-Time">
-                <label class="sr-only" for="add-Project-name"></label>
-                <input class="form-control mb-2 mr-sm-2" id="add-Project-name" placeholder="Projet" required
-                       type="text">
+                <label class="sr-only" for="add-project-id"></label>
+                <select class="form-control mb-2 mr-sm-2" id="add-project-id" required></select>
                 <label class="sr-only" for="add-Time"></label>
                 <input class="form-control mb-2 mr-sm-2" id="add-Time" placeholder="15" required
                        type="text">
@@ -32,14 +30,14 @@
 
             <div class="jumbotron" id="users-gestion">
                 <div class="row d-flex justify-content-around">
-                    <button class="btn btn-primary" id="btn-promote-manager" onclick="export_to_pdf()">exporter en pdf
-                    </button>
+                    <button class="btn btn-primary" id="btn-promote-manager" onclick="export_to_pdf()">Exporter en pdf</button>
                 </div>
             </div>
+
+            <div th:replace="fragments.html :: footer"/>
         </div>
     </div>
 
-    <div th:replace="fragments.html :: footer"/>
 </div>
 <script th:src="@{js/user.js}" type="text/javascript"></script>
 </body>

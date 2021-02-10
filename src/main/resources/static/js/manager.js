@@ -19,7 +19,7 @@ function affectProject(){
                 fetchProjects()
             }
         })
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
 }
 
 function updateNavList(element, domID) {
@@ -101,7 +101,7 @@ function fetchProjects() {
         .then(res => res.forEach(project => {
             updateNavList(project, "#projects")
         }))
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
 }
 
 
@@ -112,7 +112,7 @@ function fetchUsers() {
         .then(res => res.forEach(user => {
             updateNavListUser(user, "#users")
         }))
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
 }
 
 
@@ -141,7 +141,7 @@ $(document).ready(() => {
                     fetchUsers()
                 }
             })
-            .catch(e => console.log(e))
+            .catch(e => console.error(e))
         
     })
 
@@ -161,7 +161,7 @@ $(document).ready(() => {
                 fetchProjects()
             }
         })
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
     })
 
 
@@ -181,6 +181,6 @@ $(document).ready(() => {
                         $(this).addClass("active")
                     }))
             }))
-            .catch(e => console.log(e))
+            .catch(e => console.error(e))
     })
 })

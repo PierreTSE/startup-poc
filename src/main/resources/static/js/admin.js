@@ -21,7 +21,7 @@ function reaffect() {
                 )
             }
         })
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
 }
 
 function promote(role, endpoint) {
@@ -41,7 +41,7 @@ function promote(role, endpoint) {
                 alert("Le rôle de cet utilisateur ne peut pas être modifié car des Projets ou des Pointages lui sont associés.")
             }
         })
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
 }
 
 function promoteToManager() {
@@ -99,7 +99,7 @@ function fetchManagers() {
         .then(res => res.forEach(manager => {
             updateNavList(manager, 'manager', "#managers")
         }))
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
 }
 
 function fetchUsers() {
@@ -109,7 +109,7 @@ function fetchUsers() {
         .then(res => res.forEach(user => {
             updateNavList(user, 'user', "#users")
         }))
-        .catch(e => console.log(e))
+        .catch(e => console.error(e))
 }
 
 $(document).ready(() => {
@@ -135,7 +135,7 @@ $(document).ready(() => {
                 if (res.status === 201)
                     fetchManagers()
             })
-            .catch(e => console.log(e))
+            .catch(e => console.error(e))
     })
 
     $("#form-add-user").submit(e => {
@@ -165,7 +165,7 @@ $(document).ready(() => {
                         break
                 }
             })
-            .catch(e => console.log(e))
+            .catch(e => console.error(e))
     })
 
     $("#reaffect-modal").on("show.bs.modal", function () {
@@ -184,7 +184,7 @@ $(document).ready(() => {
                         $(this).addClass("active")
                     }))
             }))
-            .catch(e => console.log(e))
+            .catch(e => console.error(e))
     })
 
     $("#btn-promote-admin").click(e => {
