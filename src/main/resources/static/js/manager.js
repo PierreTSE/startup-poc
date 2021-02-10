@@ -1,13 +1,36 @@
-function updateNavList(element, domID) {
+function affectProject(){
+    let modal = $("#reaffect-modal")
 
+    let activeItem = modal.find(".modal-body .active")
+    if (activeItem.length === 0) return
+
+    fetch(`/users/${$("#fullname").attr('data-id')}`, {
+        method: 'PATCH',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({'project': activeItem.attr('data-id')})
+    })
+        .then(res => {
+            if (res.ok) {
+                modal.modal('hide')
+                fetchUsers()
+                fetchProjects()
+            }
+        })
+        .catch(e => console.log(e))
+}
+
+function updateNavList(element, domID) {
     let li = document.createElement('li')
     li.classList.add("nav-item")
     let div = document.createElement('div')
     div.classList.add('nav-link')
-    div.innerText = element.fullName
-    div.setAttribute("data-role", role)
+    div.innerText = element.name
     div.setAttribute("data-id", element.id)
-    div.setAttribute("data-manager-fullname", element.manager.fullName)
+    div.setAttribute("data-project-name", element.name)
+
 
     li.appendChild(div)
     document.querySelector(domID).append(li)
@@ -15,11 +38,10 @@ function updateNavList(element, domID) {
         document.querySelectorAll("#people .nav-link").forEach(div => div.classList.remove("active"))
         this.classList.add("active")
         let usersGestion = $("#users-gestion")
-        usersGestion.children("h4,p").remove()
-        usersGestion.prepend($("<h4>", {
-            id: "fullname",
-            class: 'mb-3',
-            "data-role": this.getAttribute("data-role"),
+        usersGestion.children("ul,li,h4,p").remove()
+        usersGestion.prepend($("<ul>", {
+            id: "list-users",
+            class: 'list-group',
             "data-id": this.getAttribute("data-id")
         }))
         let listUsers = $("#list-users")
@@ -34,36 +56,70 @@ function updateNavList(element, domID) {
                 }))).show()
                 let ListTimechecks=$("#list-timechecks"+user.id)
                 user.timeChecks.forEach(timecheck => {
-                    // if (projTimechecks.some((element) => element.id===timecheck.id)) {
                     ListTimechecks.append($("<li>", {
                         class: 'list-group-item'})
                     .text(timecheck.time)).show()
                 })
             }
         )
-        
-
-
+        $("#gestionUser").hide() 
         $("#gestion").show()
     })
 }
+function updateNavListUser(element, domID) {
+    let li = document.createElement('li')
+    li.classList.add("nav-item")
+    let div = document.createElement('div')
+    div.classList.add('nav-link')
+    div.innerText = element.fullName
+    div.setAttribute("data-id", element.id)
+    if (element.manager)
+        div.setAttribute("data-manager-fullname", element.manager.fullName)
 
-async function fetchProjects() {
+    li.appendChild(div)
+    document.querySelector(domID).append(li)
+    div.addEventListener('click', function () {
+        document.querySelectorAll("#people .nav-link").forEach(div => div.classList.remove("active"))
+        this.classList.add("active")
+        let buttons = $("#buttons")
+        buttons.children("h4,p").remove()
+        buttons.prepend($("<h4>", {
+            id: "fullname",
+            class: 'mb-3',
+            "data-id": this.getAttribute("data-id")
+        }).text(this.innerText)).show()
+        $("#gestionUser").show()
+        $("#gestion").hide()
+    })
+    
+}
+
+function fetchProjects() {
     $("#projects").empty()
-    try {
-        const res = await fetch("/projects")
-        const res_1 = await res.json()
-        return res_1.forEach(project => {
-            updateNavList(project , "#projects")
-        })
-    } catch (e) {
-        return console.log(e)
-    }
+    return fetch("/projects")
+        .then(res => res.json())
+        .then(res => res.forEach(project => {
+            updateNavList(project, "#projects")
+        }))
+        .catch(e => console.log(e))
+}
+
+
+function fetchUsers() {
+    $("#users").empty()
+    return fetch("/users")
+        .then(res => res.json())
+        .then(res => res.forEach(user => {
+            updateNavListUser(user, "#users")
+        }))
+        .catch(e => console.log(e))
 }
 
 
 $(document).ready(() => {
+    fetchProjects()
     fetchUsers()
+
     $("#form-add-user").submit(e => {
         e.preventDefault();
         fetch("/users", {
@@ -81,49 +137,52 @@ $(document).ready(() => {
             })
         })
             .then(res => {
-                if(res.status===201) {
+                if (res.status == 201) {
                     fetchUsers()
                 }
             })
             .catch(e => console.log(e))
+        
     })
+
 
     $("#form-add-project").submit(e => {
         e.preventDefault();
-        fetch("/users", {
+        fetch("/projects", {
             method: 'POST',
             headers: {
-                'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                name: $("#add-user-firstname").val(),
-            })
+            body: $("#add-project-name").val()
+            
         })
-            .then(res => {
-                if (res.status == 201) {
-                        fetchProjects()
-                }
-            })
+        .then(res => {
+            if (res.status == 200) {
+                    fetchProjects()
+            }
+        })
+        .catch(e => console.log(e))
+    })
+
+
+    $("#reaffect-modal").on("show.bs.modal", function () {
+        $(this).find(".modal-body").empty()
+        fetch("/projects")
+            .then(res => res.json())
+            .then(res => res.forEach(project => {
+                $(this).find(".modal-body").append($('<li>', {
+                    class: 'nav-item',
+                    style: 'cursor:pointer;',
+                    'data-id': project.id
+                })
+                    .text(project.name)
+                    .click(function () {
+                        $(this).siblings().removeClass("active")
+                        $(this).addClass("active")
+                    }))
+            }))
             .catch(e => console.log(e))
     })
 
-    // $("#reaffect-modal").on("show.bs.modal", function () {
-    //     $(this).find(".modal-body").empty()
-    //     fetch("/managers")
-    //         .then(res => res.json())
-    //         .then(res => res.forEach(manager => {
-    //             $(this).find(".modal-body").append($('<li>', {
-    //                 class: 'nav-item',
-    //                 style: 'cursor:pointer;',
-    //                 'data-id': manager.id
-    //             })
-    //                 .text(manager.fullName)
-    //                 .click(function () {
-    //                     $(this).siblings().removeClass("active")
-    //                     $(this).addClass("active")
-    //                 }))
-    //         }))
-    //         .catch(e => console.log(e))
-    // })
+
 })

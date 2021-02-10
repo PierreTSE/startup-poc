@@ -7,11 +7,9 @@ import fr.tse.poc.authentication.AuthenticableUserRepository;
 import fr.tse.poc.authentication.Role;
 import fr.tse.poc.dao.AdminRepository;
 import fr.tse.poc.dao.ManagerRepository;
+import fr.tse.poc.dao.ProjectRepository;
 import fr.tse.poc.dao.UserRepository;
-import fr.tse.poc.domain.Admin;
-import fr.tse.poc.domain.Manager;
-import fr.tse.poc.domain.People;
-import fr.tse.poc.domain.User;
+import fr.tse.poc.domain.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,6 +30,7 @@ public class UserController {
     @Autowired private AdminRepository adminRepository;
     @Autowired private ManagerRepository managerRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private ProjectRepository projectRepository;
     @Autowired private AuthenticableUserDetailsService authenticableUserDetailsService;
     @Autowired private AuthenticableUserRepository authenticableUserRepository;
 
@@ -47,6 +46,14 @@ public class UserController {
                 // Put authentified manager as this user's manager
                 manager = managerRepository.findById(userDetails.getForeignId()).orElseThrow();
                 user.setManager(manager);
+                if(body.containsKey("projectID")) {
+                    try {
+                        user.getProjects().add(projectRepository.findById(Long.valueOf((String) body.get("projectID"))).orElseThrow());
+                    } catch (NoSuchElementException e) {
+                        log.error(e.getMessage());
+                        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+                    }
+                }
                 user = userRepository.save(user);
                 authenticableUserDetailsService.addAuthenticableUser(user, Role.User, (String) body.get("password"), true);
                 return new ResponseEntity<>(user, HttpStatus.CREATED);
@@ -121,8 +128,8 @@ public class UserController {
         AuthenticableUserDetails userDetails = (AuthenticableUserDetails) authentication.getPrincipal();
         switch (userDetails.getRole()) {
             case Admin:
-                break;
             case Manager:
+                break;
             case User:
             default:
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -138,8 +145,8 @@ public class UserController {
         }
         String password = authenticableUserRepository.findByUsername(user.getFirstname()).getPassword();
 
-        if (params.containsKey("status")) {
-            switch (params.get("status")) {
+        if (params.containsKey("status") && userDetails.getRole().equals(Role.Admin)) {
+            switch (params.get("status") ) {
                 case "Admin":
                     userRepository.deleteById(user.getId());
                     Admin newAdmin = adminRepository.save(new Admin(user.getFirstname(), user.getLastname()));
@@ -155,7 +162,7 @@ public class UserController {
                 default:
                     return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
-        } else if (params.containsKey("manager")) {
+        } else if (params.containsKey("manager") && userDetails.getRole().equals(Role.Admin)) {
             // change user's manager
             Manager newManager;
             try {
@@ -166,7 +173,19 @@ public class UserController {
             }
             user.setManager(newManager);
             return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
-        } else {
+        } else if (params.containsKey("project") && userDetails.getRole().equals(Role.Manager)) {
+            // add project to user
+            Project proj=null;
+            try {
+                proj = projectRepository.findById(parseLong(params.get("project"))).orElseThrow();
+            } catch (NoSuchElementException e) {
+                log.error(e.getMessage());
+                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            }
+            proj.addUser(user);
+            projectRepository.save(proj);
+            return new ResponseEntity<>(userRepository.save(user), HttpStatus.OK);
+        }else {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }

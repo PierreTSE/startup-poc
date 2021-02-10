@@ -12,7 +12,9 @@
         <div class="col-md-2 bg-light" id="people">
             <span class="navbar-brand font-weight-bold">Collaborateurs</span>
             <div class="pl-3">
-                <u>Users</u>
+                <u>Projects</u>
+                <ul class="nav flex-column" id="projects"></ul>
+                <u>Utilisateurs</u>
                 <ul class="nav flex-column" id="users"></ul>
             </div>
         </div>
@@ -20,32 +22,67 @@
         <div class="col-md-10">
             <!-- content-->
             <h2>Créer un Utilisateur</h2>
-            <form class="form-inline jumbotron" id="form-add-user">
+            <form autocomplete="off" class="form-inline jumbotron" id="form-add-user">
                 <label class="sr-only" for="add-user-firstname"></label>
-                <input class="form-control mb-2 mr-sm-2" id="add-user-firstname" placeholder="Rémy" required
+                <input class="form-control mb-2 mr-sm-2" id="add-user-firstname" placeholder="Prénom" required
                        type="text">
                 <label class="sr-only" for="add-user-lastname"></label>
-                <input class="form-control mb-2 mr-sm-2" id="add-user-lastname" placeholder="Girodon" required
+                <input class="form-control mb-2 mr-sm-2" id="add-user-lastname" placeholder="Nom" required
                        type="text">
+                <label class="sr-only" for="add-user-password"></label>
+                <input class="form-control mb-2 mr-sm-2" id="add-user-password" placeholder="Mot de passe" required
+                       type="password">
+                <button class="btn btn-primary mb-2" type="submit">Créer</button>
             </form>
             <h2>Créer un Projet</h2>
-            <form class="form-inline jumbotron" id="form-add-user">
+            <form class="form-inline jumbotron" id="form-add-project">
                 <label class="sr-only" for="add-project-name"></label>
                 <input class="form-control mb-2 mr-sm-2" id="add-project-name" placeholder="Rémy" required
                        type="text">
+                <button class="btn btn-primary mb-2" type="submit">Créer</button>
             </form>
 
             <div id="gestion" style="display: none">
-                <h2>Gestion des collaborateurs</h2>
+                <h2>Affichage des timechecks</h2>
                 <div class="jumbotron" id="users-gestion">
-                    <div class="row d-flex justify-content-around">
+                </div>
+            </div>
 
+            <div id="gestionUser" style="display: none">
+                <h2>User</h2>
+                <div class="jumbotron" id="buttons">
+                    <div class="row d-flex justify-content-around">
+                        <button class="btn btn-primary" data-target="#reaffect-modal" data-toggle="modal"
+                                id="btn-reaffect">Changer l'affectation
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <script th:src="@{js/manager.js}"></script>
+</div>
 
+<!-- Reaffect modal -->
+<div aria-hidden="true" aria-labelledby="reaffect-modal-label" class="modal fade" id="reaffect-modal" role="dialog"
+     tabindex="-1">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reaffect-modal-label">Ajouter un projet</h5>
+                <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <ul class="nav flex-column modal-body">
+
+            </ul>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal" type="button">Fermer</button>
+                <button class="btn btn-primary" onclick="affectProject()" type="button">Affecter à un projet</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
