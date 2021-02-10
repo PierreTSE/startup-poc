@@ -34,7 +34,8 @@ $(document).ready(() => {
             .then(res => res.forEach(proj => {
                 const name = JSON.stringify(proj.name);
                 console.log(name);
-                if (name === ($("#add-Project-name").val())) {
+                console.log( "\"" +($("#add-Project-name").val())+"\"");
+                if (name === "\"" +($("#add-Project-name").val())+"\"") {
                     idproj = proj.id;
                     console.log(idproj)
                 }
