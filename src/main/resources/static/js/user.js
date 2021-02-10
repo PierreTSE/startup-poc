@@ -67,8 +67,10 @@ $(document).ready(() => {
         fetch("/projects")
         	.then(res => res.json())
         	.then(res => res.forEach(proj => {
-        		console.log(proj);
-            	if (proj.name == $("#add-Project-name").val()){
+        		
+        		var name = JSON.stringify(proj.name)
+        		console.log(name);
+            	if (name ==( $("#add-Project-name").val())){
             		idproj = proj.id;
             		console.log(idproj)
             	}
