@@ -107,7 +107,7 @@ public class FillDatabase {
             user3.addTimeCheck(timeChecks.get(5));
 
             projectOneUser.addTimeCheck(timeChecks.get(0));
-            for (int i = 0; i < timeChecks.size(); ++i) projectThreeUser.addTimeCheck(timeChecks.get(i));
+            for (TimeCheck timeCheck : timeChecks) projectThreeUser.addTimeCheck(timeCheck);
 
             timeCheckRepository.saveAll(timeChecks);
         };
