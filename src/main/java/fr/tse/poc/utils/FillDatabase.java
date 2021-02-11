@@ -50,6 +50,69 @@ public class FillDatabase {
         };
     }
 
+    @Bean
+    @Profile("demo")
+    CommandLineRunner initDemoDatabase() {
+        return args -> {
+            log.info("Initializing database for test");
+
+            Admin admin = new Admin("Jacques", "Fayolle");
+            adminRepository.save(admin);
+            saveCredentials(admin, Role.Admin);
+
+            Manager manager1 = new Manager("Rémy", "Girodon");
+            managerRepository.save(manager1);
+            saveCredentials(manager1, Role.Manager);
+            Manager manager2 = new Manager("Mickael", "Faust");
+            managerRepository.save(manager2);
+            saveCredentials(manager2, Role.Manager);
+
+            User user1 = new User("Rémi", "Huguenot");
+            user1.setManager(manager1);
+            userRepository.save(user1);
+            saveCredentials(user1, Role.User);
+            User user2 = new User("Pierre", "Giraud");
+            user2.setManager(manager2);
+            userRepository.save(user2);
+            saveCredentials(user2, Role.User);
+            User user3 = new User("Antoine", "Genthon");
+            user3.setManager(manager2);
+            userRepository.save(user3);
+            saveCredentials(user3, Role.User);
+
+            Project projectEmpty = new Project("Projet vide");
+            projectEmpty.setManager(manager1);
+            projectRepository.save(projectEmpty);
+
+            Project projectOneUser = new Project("Projet 1 user");
+            projectOneUser.setManager(manager1);
+            projectOneUser.addUser(user1);
+            projectRepository.save(projectOneUser);
+
+            Project projectThreeUser = new Project("Startup POC");
+            projectThreeUser.setManager(manager2);
+            projectThreeUser.addUser(user1);
+            projectThreeUser.addUser(user2);
+            projectThreeUser.addUser(user3);
+            projectRepository.save(projectThreeUser);
+
+            List<TimeCheck> timeChecks = IntStream.range(0, 6).boxed()
+                    .map(i -> new TimeCheck(i / 8.)).collect(Collectors.toList());
+
+            user1.addTimeCheck(timeChecks.get(0));
+            user2.addTimeCheck(timeChecks.get(1));
+            user2.addTimeCheck(timeChecks.get(2));
+            user3.addTimeCheck(timeChecks.get(3));
+            user3.addTimeCheck(timeChecks.get(4));
+            user3.addTimeCheck(timeChecks.get(5));
+
+            projectOneUser.addTimeCheck(timeChecks.get(0));
+            for (TimeCheck timeCheck : timeChecks) projectThreeUser.addTimeCheck(timeCheck);
+
+            timeCheckRepository.saveAll(timeChecks);
+        };
+    }
+
     private void saveCredentials(People people, Role role) {
         AuthenticableUser authenticableUser = new AuthenticableUser(
                 people.getFirstname(),
